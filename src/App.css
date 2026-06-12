@@ -183,53 +183,162 @@
   }
 }
 
-/* Resume app styles */
+/* Premium Resume Dashboard Styles */
+
 .app-container {
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+  text-align: left;
+}
+
+.header-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-brand h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+  color: var(--text-h);
+}
+
+.badge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  padding: 2px 8px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Button UI Components */
+.btn {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-0.5px);
+  box-shadow: 0 4px 10px var(--accent-bg);
+}
+
+.btn-secondary {
+  background: var(--code-bg);
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+.btn-danger {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  color: #cf1322;
+}
+
+.btn-danger:hover {
+  background: #ffccc7;
+  color: #a8071a;
+}
+
+.btn-lg {
+  padding: 10px 20px;
+  font-size: 14.5px;
+}
+
+/* Grid & Workspace */
 .workspace-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(400px, 1.1fr) minmax(500px, 1.3fr);
   gap: 24px;
   align-items: start;
 }
 
-.resume-form {
+@media (max-width: 1200px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.editor-pane {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+}
+
+.preview-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.preview-sticky-container {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.preview-info-banner {
+  background: var(--code-bg);
+  border-left: 4px solid var(--accent);
+  color: var(--text-h);
+  padding: 12px;
+  border-radius: 0 8px 8px 0;
+  font-size: 12.5px;
   text-align: left;
+  line-height: 1.4;
 }
 
-.resume-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* Hide other assets for this file view */
+.hero, #center, #next-steps, #spacer {
+  display: none !important;
 }
 
-.resume-form input,
-.resume-form textarea {
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font: inherit;
-}
-
-.form-actions { margin-top: 12px }
-
-.resume-preview { border: 1px solid var(--border); padding: 16px; background: var(--bg) }
-
-.resume-sheet { max-width: 800px; margin: 0 auto; text-align: left }
-.r-header { display:flex; justify-content:space-between; align-items:flex-end }
-.r-name { margin: 0; font-size: 28px }
-.r-meta { text-align: right }
-.r-section { margin-top: 12px }
-.r-exp { margin-bottom: 8px }
-
-/* Print-specific: when printing, show only the resume sheet */
-@media print {
-  body * { visibility: hidden }
-  #resume-preview, #resume-preview * { visibility: visible }
-  #resume-preview { position: absolute; left: 0; top: 0; width: 100% }
-}

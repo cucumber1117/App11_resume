@@ -1,64 +1,316 @@
-.resumeForm {
+/* ResumeForm.module.css - Tabbed Form Layout Styles */
+
+.formContainer {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tabs navigation bar */
+.tabsNav {
+  display: flex;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  flex: 1 1 auto;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-h);
+}
+
+.activeTab {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: var(--bg);
+}
+
+/* Form body */
+.formBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tabSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sectionTitle {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-h);
+  border-left: 4px solid var(--accent);
+  padding-left: 8px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formCol {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  text-align: left;
 }
 
+/* Input Fields */
 .label {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  font-size: 13.5px;
   font-weight: 500;
+  color: var(--text-h);
+  text-align: left;
 }
 
 .input {
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font: inherit;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 .textarea {
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  min-height: 80px;
-  font: inherit;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.section {
-  margin-top: 8px;
+.textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
-.expItem {
+/* Date / Multi-inputs Row */
+.dateInputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.inputShort {
+  width: 70px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.inputTiny {
+  width: 45px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.genderDobRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-items: start;
+  gap: 12px;
+}
+
+/* Certificate Photo area */
+.photoControl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fileInput {
+  font-size: 12px;
+  max-width: 100%;
+}
+
+.btnDangerSmall {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.btnDangerSmall:hover {
+  opacity: 0.85;
+}
+
+.helpText {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0;
+  padding: 10px;
+  background: var(--code-bg);
+  border-radius: 6px;
+}
+
+.descText {
+  font-size: 12px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.historyInfo {
   margin-bottom: 8px;
 }
 
-.removeBtn {
-  grid-column: 1 / -1;
-  justify-self: end;
-  background: #fff;
+/* History Dynamic Editing Table */
+.gridTableScroll {
+  max-height: 480px;
+  overflow-y: auto;
   border: 1px solid var(--border);
-  padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-.addBtn {
-  padding: 8px 12px;
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-  border-radius: 6px;
+.editGridTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
 }
 
-.formActions {
-  margin-top: 12px;
+.editGridTable th {
+  background: var(--code-bg);
+  color: var(--text-h);
+  font-weight: 600;
+  padding: 8px;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-@media (max-width: 800px) {
-  .expItem { grid-template-columns: 1fr; }
+.editGridTable td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.editGridTable tr:hover {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.gridInputCenter {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+}
+
+.gridInputLeft {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+}
+
+.gridSelect {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+}
+
+/* Save Actions button */
+.formFooterActions {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btnSave {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px var(--accent-bg);
+  transition: all 0.2s;
+}
+
+.btnSave:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
