@@ -30,6 +30,16 @@ export default function ResumeForm({ data, onChange, onSave }) {
     onChange({ ...data, gridItems: nextGrid })
   }
 
+  // Helper to update license items
+  function updateLicenseItem(idx, field, value) {
+    const nextLicense = [...(data.licenseItems || [])]
+    nextLicense[idx] = {
+      ...nextLicense[idx],
+      [field]: value
+    }
+    onChange({ ...data, licenseItems: nextLicense })
+  }
+
   // Paste image handler for certificate photo
   function handlePaste(e) {
     const items = e.clipboardData && e.clipboardData.items
@@ -76,17 +86,17 @@ export default function ResumeForm({ data, onChange, onSave }) {
         </button>
         <button
           type="button"
-          className={`${styles.tabBtn} ${activeTab === 'research' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('research')}
+          className={`${styles.tabBtn} ${activeTab === 'license' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('license')}
         >
-          卒業研究・得意科目
+          免許・資格
         </button>
         <button
           type="button"
           className={`${styles.tabBtn} ${activeTab === 'intro' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('intro')}
         >
-          自己PR・志望動機
+          自己PR・希望欄
         </button>
       </nav>
 
@@ -187,7 +197,6 @@ export default function ResumeForm({ data, onChange, onSave }) {
                         if (!file) return
                         const reader = new FileReader()
                         reader.onload = () => updateField('referenceImage', reader.result)
-                        // For PDFs we can still show an embedded preview if supported by browser as data URL
                         reader.readAsDataURL(file)
                       }}
                     />
@@ -208,12 +217,13 @@ export default function ResumeForm({ data, onChange, onSave }) {
                     性別
                     <select
                       className={styles.input}
-                      value={data.gender || '男'}
+                      value={data.gender || ''}
                       onChange={(e) => updateField('gender', e.target.value)}
                     >
+                      <option value="">未選択 (任意)</option>
                       <option value="男">男</option>
                       <option value="女">女</option>
-                      <option value="その他">その他 / 未回答</option>
+                      <option value="その他">その他</option>
                     </select>
                   </label>
 
@@ -264,6 +274,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
             <h3 className={styles.sectionTitle}>現住所・連絡先</h3>
             <div className={styles.formGrid}>
               <div className={styles.formCol}>
+                <h4 className={styles.subSectionTitle}>現住所</h4>
                 <label className={styles.label}>
                   現住所 ふりがな
                   <input
@@ -298,33 +309,33 @@ export default function ResumeForm({ data, onChange, onSave }) {
                   />
                 </label>
 
-                <div className={styles.genderDobRow}>
-                  <label className={styles.label}>
-                    電話番号 (固定)
-                    <input
-                      type="text"
-                      className={styles.input}
-                      placeholder="03-XXXX-XXXX"
-                      value={data.tel || ''}
-                      onChange={(e) => updateField('tel', e.target.value)}
-                    />
-                  </label>
-                  <label className={styles.label}>
-                    携帯電話
-                    <input
-                      type="text"
-                      className={styles.input}
-                      placeholder="090-XXXX-XXXX"
-                      value={data.mobile || ''}
-                      onChange={(e) => updateField('mobile', e.target.value)}
-                    />
-                  </label>
-                </div>
+                <label className={styles.label}>
+                  電話番号 (固定または携帯)
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="03-XXXX-XXXX"
+                    value={data.tel || ''}
+                    onChange={(e) => updateField('tel', e.target.value)}
+                  />
+                </label>
+
+                <label className={styles.label}>
+                  E-mail
+                  <input
+                    type="email"
+                    className={styles.input}
+                    placeholder="taro.tokyo@example.com"
+                    value={data.email || ''}
+                    onChange={(e) => updateField('email', e.target.value)}
+                  />
+                </label>
               </div>
 
               <div className={styles.formCol}>
+                <h4 className={styles.subSectionTitle}>連絡先 (現住所と異なる場合のみ)</h4>
                 <label className={styles.label}>
-                  連絡先 (帰省先など) ふりがな
+                  連絡先 ふりがな
                   <input
                     type="text"
                     className={styles.input}
@@ -335,7 +346,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                 </label>
 
                 <label className={styles.label}>
-                  連絡先 郵便番号
+                  郵便番号 (ハイフンなし)
                   <input
                     type="text"
                     className={styles.input}
@@ -347,7 +358,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                 </label>
 
                 <label className={styles.label}>
-                  連絡先 住所
+                  住所
                   <input
                     type="text"
                     className={styles.input}
@@ -358,7 +369,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                 </label>
 
                 <label className={styles.label}>
-                  連絡先 電話番号
+                  電話番号
                   <input
                     type="text"
                     className={styles.input}
@@ -367,19 +378,19 @@ export default function ResumeForm({ data, onChange, onSave }) {
                     onChange={(e) => updateField('altTel', e.target.value)}
                   />
                 </label>
+
+                <label className={styles.label}>
+                  E-mail
+                  <input
+                    type="email"
+                    className={styles.input}
+                    placeholder="alt.tokyo@example.com"
+                    value={data.altEmail || ''}
+                    onChange={(e) => updateField('altEmail', e.target.value)}
+                  />
+                </label>
               </div>
             </div>
-
-            <label className={styles.label}>
-              E-mail
-              <input
-                type="email"
-                className={styles.input}
-                placeholder="taro.tokyo@example.com"
-                value={data.email || ''}
-                onChange={(e) => updateField('email', e.target.value)}
-              />
-            </label>
           </div>
         )}
 
@@ -387,9 +398,9 @@ export default function ResumeForm({ data, onChange, onSave }) {
         {activeTab === 'history' && (
           <div className={styles.tabSection}>
             <div className={styles.historyInfo}>
-              <h3 className={styles.sectionTitle}>学歴・職歴・賞罰 (全18行)</h3>
+              <h3 className={styles.sectionTitle}>学歴・職歴・賞罰 (全21行)</h3>
               <p className={styles.descText}>
-                日本の履歴書仕様のテーブルです。「学歴」「職歴」「賞罰」などの見出し行は中央寄せにして、「以上」は右寄せにすると見栄えが良くなります。
+                JIS規格に基づき、1ページ目に14行、2ページ目に7行が自動的に分割されて配置されます。
               </p>
             </div>
 
@@ -452,219 +463,87 @@ export default function ResumeForm({ data, onChange, onSave }) {
           </div>
         )}
 
-        {/* ================= TAB 3: 東京電機大学・卒業研究 ================= */}
-        {activeTab === 'research' && (
+        {/* ================= TAB 3: 免許・資格 ================= */}
+        {activeTab === 'license' && (
           <div className={styles.tabSection}>
-            <h3 className={styles.sectionTitle}>{data.uniName || data.universityName || '大学名を入力'} 学業情報</h3>
-            
-            <div className={styles.formGrid}>
-              <div className={styles.formCol}>
-                <label className={styles.label}>
-                  卒業・修了年月日 (自己紹介書上部)
-                  <div className={styles.dateInputs}>
-                    <input
-                      type="text"
-                      className={styles.inputShort}
-                      placeholder="2027"
-                      value={data.uniYear || ''}
-                      onChange={(e) => updateField('uniYear', e.target.value)}
-                    />
-                    <span>年</span>
-                    <input
-                      type="text"
-                      className={styles.inputTiny}
-                      placeholder="3"
-                      value={data.uniMonth || ''}
-                      onChange={(e) => updateField('uniMonth', e.target.value)}
-                    />
-                    <span>月</span>
-                  </div>
-                </label>
-
-                <label className={styles.label}>
-                  大学名
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="東京電機大学"
-                    value={data.uniName || data.universityName || ''}
-                    onChange={(e) => updateField('uniName', e.target.value)}
-                  />
-                </label>
-
-                <label className={styles.label}>
-                  研究科・学部名・学系学科名
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="工学部 情報通信工学科"
-                    value={data.uniDept || ''}
-                    onChange={(e) => updateField('uniDept', e.target.value)}
-                  />
-                </label>
-
-                <label className={styles.label}>
-                  区分
-                  <select
-                    className={styles.input}
-                    value={data.uniStatus || '見込'}
-                    onChange={(e) => updateField('uniStatus', e.target.value)}
-                  >
-                    <option value="見込">卒業見込</option>
-                    <option value="卒業">卒業</option>
-                    <option value="修了">修了</option>
-                    <option value="修了見込">修了見込</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className={styles.formCol}>
-                <label className={styles.label}>
-                  自己紹介書用の提出日付
-                  <div className={styles.dateInputs}>
-                    <input
-                      type="text"
-                      className={styles.inputShort}
-                      placeholder="2026"
-                      value={data.selfIntroDate?.year || ''}
-                      onChange={(e) => updateNestedField('selfIntroDate', 'year', e.target.value)}
-                    />
-                    <span>年</span>
-                    <input
-                      type="text"
-                      className={styles.inputTiny}
-                      placeholder="6"
-                      value={data.selfIntroDate?.month || ''}
-                      onChange={(e) => updateNestedField('selfIntroDate', 'month', e.target.value)}
-                    />
-                    <span>月</span>
-                    <input
-                      type="text"
-                      className={styles.inputTiny}
-                      placeholder="13"
-                      value={data.selfIntroDate?.day || ''}
-                      onChange={(e) => updateNestedField('selfIntroDate', 'day', e.target.value)}
-                    />
-                    <span>日現在</span>
-                  </div>
-                </label>
-
-                <p className={styles.helpText}>
-                  ※ 自己紹介書の「氏名」「ふりがな」「生年月日」は、履歴書側の入力値が自動同期されます。
-                  もし変更したい場合は、画面上部の「基本情報を自己紹介書へ同期」ボタンを押すと再ロードされます。
-                </p>
-              </div>
+            <div className={styles.historyInfo}>
+              <h3 className={styles.sectionTitle}>免許・資格 (全5行)</h3>
+              <p className={styles.descText}>
+                JIS規格に基づき、2ページ目の上部に表示されます。
+              </p>
             </div>
 
-            <h3 className={styles.sectionTitle}>卒業研究情報</h3>
-            <div className={styles.formGrid}>
-              <div className={styles.formCol}>
-                <label className={styles.label}>
-                  卒業研究テーマ (卒業研究のテーマ名)
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="深層学習を用いた自動運転画像認識プロトタイプの開発"
-                    value={data.researchTheme || ''}
-                    onChange={(e) => updateField('researchTheme', e.target.value)}
-                  />
-                </label>
-              </div>
-              <div className={styles.formCol}>
-                <label className={styles.label}>
-                  指導教員
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="電大 太郎 教授"
-                    value={data.supervisor || ''}
-                    onChange={(e) => updateField('supervisor', e.target.value)}
-                  />
-                </label>
-              </div>
+            <div className={styles.gridTableScroll}>
+              <table className={styles.editGridTable}>
+                <thead>
+                  <tr>
+                    <th style={{ width: '15%' }}>年</th>
+                    <th style={{ width: '10%' }}>月</th>
+                    <th style={{ width: '75%' }}>内容 (免許・資格)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.licenseItems || []).map((item, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <input
+                          type="text"
+                          className={styles.gridInputCenter}
+                          placeholder="2025"
+                          value={item.year || ''}
+                          onChange={(e) => updateLicenseItem(idx, 'year', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className={styles.gridInputCenter}
+                          placeholder="4"
+                          value={item.month || ''}
+                          onChange={(e) => updateLicenseItem(idx, 'month', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className={styles.gridInputLeft}
+                          placeholder="普通自動車第一種運転免許 取得"
+                          value={item.content || ''}
+                          onChange={(e) => updateLicenseItem(idx, 'content', e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-            <label className={styles.label}>
-              卒業研究内容 (自己紹介書の「内容」欄)
-              <textarea
-                className={styles.textarea}
-                rows="6"
-                placeholder="研究の背景、目的、およびアプローチ方法などを記入してください。"
-                value={data.researchContent || ''}
-                onChange={(e) => updateField('researchContent', e.target.value)}
-              />
-            </label>
           </div>
         )}
 
-        {/* ================= TAB 4: 自己紹介書 項目 ================= */}
+        {/* ================= TAB 4: 自己PR・本人希望欄 ================= */}
         {activeTab === 'intro' && (
           <div className={styles.tabSection}>
-            <h3 className={styles.sectionTitle}>自己紹介書 その他項目</h3>
-
-            <label className={styles.label}>
-              得意な科目
-              <textarea
-                className={styles.textarea}
-                rows="3"
-                placeholder="アルゴリズム論、システム開発実習など得意な講義や分野を記入してください。"
-                value={data.favoriteSubject || ''}
-                onChange={(e) => updateField('favoriteSubject', e.target.value)}
-              />
-            </label>
+            <h3 className={styles.sectionTitle}>自己PR・本人希望欄</h3>
 
             <label className={styles.label}>
               自己PR
               <textarea
                 className={styles.textarea}
-                rows="5"
-                placeholder="ご自身の強みや経験などをアピールしてください。"
+                rows="8"
+                placeholder="ご自身の強みやこれまでの経験、長所などをアピールしてください。"
                 value={data.selfPR || ''}
                 onChange={(e) => updateField('selfPR', e.target.value)}
               />
             </label>
 
             <label className={styles.label}>
-              学生時代に打ち込んだこと
+              本人希望記入欄
               <textarea
                 className={styles.textarea}
-                rows="5"
-                placeholder="サークル活動、部活動、アルバイト、趣味の制作などで力を入れたことを記入してください。"
-                value={data.studentActivities || ''}
-                onChange={(e) => updateField('studentActivities', e.target.value)}
-              />
-            </label>
-
-            <label className={styles.label}>
-              趣味
-              <textarea
-                className={styles.textarea}
-                rows="3"
-                placeholder="旅行、プログラミング、読書など趣味を簡潔に記述してください。"
-                value={data.hobbies || ''}
-                onChange={(e) => updateField('hobbies', e.target.value)}
-              />
-            </label>
-
-            <label className={styles.label}>
-              資格・免許・特技等
-              <textarea
-                className={styles.textarea}
-                rows="4"
-                placeholder="基本情報技術者試験 合格 (2025年4月)&#10;普通自動車第一種運転免許 取得 (2024年8月)など"
-                value={data.qualifications || ''}
-                onChange={(e) => updateField('qualifications', e.target.value)}
-              />
-            </label>
-
-            <label className={styles.label}>
-              志望動機
-              <textarea
-                className={styles.textarea}
-                rows="5"
-                placeholder="その企業・組織を志望する動機を記入してください。"
-                value={data.motivation || ''}
-                onChange={(e) => updateField('motivation', e.target.value)}
+                rows="8"
+                placeholder="特に給与、職種、勤務時間、勤務地、その他についての希望などがあれば記入してください。"
+                value={data.personalRequest || ''}
+                onChange={(e) => updateField('personalRequest', e.target.value)}
               />
             </label>
           </div>

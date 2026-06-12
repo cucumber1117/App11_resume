@@ -10,7 +10,7 @@ const defaultData = {
   // 履歴書 氏名・基本情報
   nameFurigana: '',
   name: '',
-  gender: '男',
+  gender: '',
   birthDate: { year: '', month: '', day: '', age: '' },
   photo: '',
   
@@ -19,17 +19,16 @@ const defaultData = {
   addressZip: '',
   address: '',
   tel: '',
-  mobile: '',
+  email: '',
   
-  // 帰省先 (連絡先)
+  // 連絡先 (現住所と異なる場合のみ)
   altAddressFurigana: '',
   altAddressZip: '',
   altAddress: '',
   altTel: '',
+  altEmail: '',
   
-  email: '',
-  
-  // 学歴・職歴・賞罰 (18行)
+  // 学歴・職歴・賞罰 (21行)
   gridItems: [
     { year: '', month: '', content: '学　　歴', align: 'center' },
     { year: '', month: '', content: '', align: 'left' },
@@ -49,27 +48,28 @@ const defaultData = {
     { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
+    { year: '', month: '', content: '', align: 'left' },
+    { year: '', month: '', content: '', align: 'left' },
+    { year: '', month: '', content: '', align: 'left' },
   ],
 
-  // 自己紹介書
-  selfIntroDate: { year: '', month: '', day: '' },
-  uniYear: '',
-  uniMonth: '',
-  uniDept: '',
-  uniStatus: '見込', // 卒業 / 見込
-  
-  // 卒業研究テーマ等
-  researchTheme: '',
-  supervisor: '',
-  researchContent: '',
-  
-  // テキスト領域
-  favoriteSubject: '',
+  // 免許・資格 (5行)
+  licenseItems: [
+    { year: '', month: '', content: '' },
+    { year: '', month: '', content: '' },
+    { year: '', month: '', content: '' },
+    { year: '', month: '', content: '' },
+    { year: '', month: '', content: '' },
+  ],
+
+  // 自己PR
   selfPR: '',
-  studentActivities: '',
-  hobbies: '',
-  qualifications: '',
-  motivation: '',
+
+  // 本人希望記入欄
+  personalRequest: '',
+  
+  // 参照テンプレート画像
+  referenceImage: '',
 }
 
 function App() {
@@ -196,30 +196,14 @@ function App() {
     localStorage.removeItem('resume_full_tdu')
   }
 
-  // Auto-sync basic profile fields from Page 1 to Page 2 if needed
-  function handleSyncProfile() {
-    setData(prev => ({
-      ...prev,
-      selfIntroFurigana: prev.nameFurigana,
-      selfIntroName: prev.name,
-      selfIntroGender: prev.gender,
-      selfIntroBirthDate: { ...prev.birthDate },
-      selfIntroDate: { ...prev.resumeDate }
-    }))
-    alert('履歴書の基本情報と日付を自己紹介書へコピーしました')
-  }
-
   return (
     <div className="app-container">
       <header className="app-header">
         <div className="header-brand">
-          <span className="badge">TDU Style</span>
-          <h1>履歴書＆自己紹介書 作成ツール</h1>
+          <span className="badge">Standard JIS</span>
+          <h1>履歴書 作成ツール</h1>
         </div>
-          <div className="header-actions">
-          <button className="btn btn-secondary" onClick={handleSyncProfile}>
-            基本情報を自己紹介書へ同期
-          </button>
+        <div className="header-actions">
           <button className="btn btn-danger" onClick={handleReset}>
             初期化
           </button>
