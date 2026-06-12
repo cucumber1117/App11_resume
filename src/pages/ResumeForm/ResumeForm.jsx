@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import styles from './ResumeForm.module.css'
 
 export default function ResumeForm({ data, onChange, onSave }) {
   const [local, setLocal] = useState(data)
@@ -38,50 +39,50 @@ export default function ResumeForm({ data, onChange, onSave }) {
   }
 
   return (
-    <form className="resume-form" onSubmit={(e) => { e.preventDefault(); onSave(local) }}>
-      <label>
+    <form className={styles.resumeForm} onSubmit={(e) => { e.preventDefault(); onSave(local) }}>
+      <label className={styles.label}>
         氏名
-        <input value={local.name || ''} onChange={(e) => updateField('name', e.target.value)} />
+        <input className={styles.input} value={local.name || ''} onChange={(e) => updateField('name', e.target.value)} />
       </label>
 
-      <label>
+      <label className={styles.label}>
         職種/肩書き
-        <input value={local.title || ''} onChange={(e) => updateField('title', e.target.value)} />
+        <input className={styles.input} value={local.title || ''} onChange={(e) => updateField('title', e.target.value)} />
       </label>
 
-      <label>
+      <label className={styles.label}>
         連絡先
-        <input value={local.contact || ''} onChange={(e) => updateField('contact', e.target.value)} />
+        <input className={styles.input} value={local.contact || ''} onChange={(e) => updateField('contact', e.target.value)} />
       </label>
 
-      <label>
+      <label className={styles.label}>
         プロフィール
-        <textarea value={local.summary || ''} onChange={(e) => updateField('summary', e.target.value)} />
+        <textarea className={styles.textarea} value={local.summary || ''} onChange={(e) => updateField('summary', e.target.value)} />
       </label>
 
-      <section>
+      <section className={styles.section}>
         <h3>職務経歴</h3>
         {(local.experiences || []).map((ex, idx) => (
-          <div key={idx} className="exp-item">
-            <input placeholder="役職" value={ex.title} onChange={(e) => updateExperience(idx, 'title', e.target.value)} />
-            <input placeholder="会社" value={ex.company} onChange={(e) => updateExperience(idx, 'company', e.target.value)} />
-            <input placeholder="期間" value={ex.dates} onChange={(e) => updateExperience(idx, 'dates', e.target.value)} />
-            <textarea placeholder="詳細" value={ex.description} onChange={(e) => updateExperience(idx, 'description', e.target.value)} />
-            <button type="button" onClick={() => removeExperience(idx)}>削除</button>
+          <div key={idx} className={styles.expItem}>
+            <input className={styles.input} placeholder="役職" value={ex.title} onChange={(e) => updateExperience(idx, 'title', e.target.value)} />
+            <input className={styles.input} placeholder="会社" value={ex.company} onChange={(e) => updateExperience(idx, 'company', e.target.value)} />
+            <input className={styles.input} placeholder="期間" value={ex.dates} onChange={(e) => updateExperience(idx, 'dates', e.target.value)} />
+            <textarea className={styles.textarea} placeholder="詳細" value={ex.description} onChange={(e) => updateExperience(idx, 'description', e.target.value)} />
+            <button className={styles.removeBtn} type="button" onClick={() => removeExperience(idx)}>削除</button>
           </div>
         ))}
-        <button type="button" onClick={addExperience}>経歴を追加</button>
+        <button className={styles.addBtn} type="button" onClick={addExperience}>経歴を追加</button>
       </section>
 
-      <section>
+      <section className={styles.section}>
         <h3>学歴</h3>
-        <label>
+        <label className={styles.label}>
           学歴（概要）
-          <textarea value={local.education || ''} onChange={(e) => updateField('education', e.target.value)} />
+          <textarea className={styles.textarea} value={local.education || ''} onChange={(e) => updateField('education', e.target.value)} />
         </label>
       </section>
 
-      <div className="form-actions">
+      <div className={styles.formActions}>
         <button type="submit">保存</button>
       </div>
     </form>

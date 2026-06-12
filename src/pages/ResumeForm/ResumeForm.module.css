@@ -1,0 +1,64 @@
+.resumeForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 80px;
+  font: inherit;
+}
+
+.section {
+  margin-top: 8px;
+}
+
+.expItem {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+.removeBtn {
+  grid-column: 1 / -1;
+  justify-self: end;
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.addBtn {
+  padding: 8px 12px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+}
+
+.formActions {
+  margin-top: 12px;
+}
+
+@media (max-width: 800px) {
+  .expItem { grid-template-columns: 1fr; }
+}
