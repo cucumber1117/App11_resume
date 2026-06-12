@@ -1,11 +1,51 @@
 import { useState } from 'react'
 import './App.css'
+import Home from './pages/Home/Home'
 import ResumeForm from './pages/ResumeForm/ResumeForm'
 import ResumePreview from './pages/ResumePreview/ResumePreview'
 
+function getTodayParts() {
+  const today = new Date()
+  return {
+    year: String(today.getFullYear()),
+    month: String(today.getMonth() + 1),
+    day: String(today.getDate())
+  }
+}
+
+function calculateAge(birthDate, referenceDate) {
+  const birthYear = Number(birthDate?.year)
+  const birthMonth = Number(birthDate?.month)
+  const birthDay = Number(birthDate?.day)
+  const referenceYear = Number(referenceDate?.year)
+  const referenceMonth = Number(referenceDate?.month)
+  const referenceDay = Number(referenceDate?.day)
+
+  if (
+    !birthYear || !birthMonth || !birthDay ||
+    !referenceYear || !referenceMonth || !referenceDay
+  ) {
+    return ''
+  }
+
+  let age = referenceYear - birthYear
+  if (
+    referenceMonth < birthMonth ||
+    (referenceMonth === birthMonth && referenceDay < birthDay)
+  ) {
+    age -= 1
+  }
+
+  return age >= 0 ? String(age) : ''
+}
+
+const todayParts = getTodayParts()
+
 const defaultData = {
+  templateType: 'employment',
+
   // 履歴書 共通日付
-  resumeDate: { year: '', month: '', day: '' },
+  resumeDate: todayParts,
   
   // 履歴書 氏名・基本情報
   nameFurigana: '',
@@ -71,13 +111,34 @@ const defaultData = {
 }
 
 function App() {
+  const [currentView, setCurrentView] = useState('home')
+  const [hasSavedData, setHasSavedData] = useState(
+    () => Boolean(localStorage.getItem('resume_full_tdu'))
+  )
   const [data, setData] = useState(() => {
     try {
       const saved = localStorage.getItem('resume_full_tdu')
       if (saved) {
         const parsed = JSON.parse(saved)
-        // Ensure default properties exist
-        return { ...defaultData, ...parsed }
+        const savedResumeDate = parsed.resumeDate || {}
+        const hasSavedResumeDate =
+          savedResumeDate.year || savedResumeDate.month || savedResumeDate.day
+        const resumeDate = hasSavedResumeDate ? savedResumeDate : getTodayParts()
+        const birthDate = {
+          ...defaultData.birthDate,
+          ...(parsed.birthDate || {})
+        }
+
+        if (!birthDate.age) {
+          birthDate.age = calculateAge(birthDate, resumeDate)
+        }
+
+        return {
+          ...defaultData,
+          ...parsed,
+          resumeDate,
+          birthDate
+        }
       }
     } catch (e) {
       console.error(e)
@@ -87,11 +148,8 @@ function App() {
 
   function handleSave(d) {
     localStorage.setItem('resume_full_tdu', JSON.stringify(d))
+    setHasSavedData(true)
     alert('入力データを保存しました（ブラウザに一時保存されます）')
-  }
-
-  function handlePrint() {
-    window.print()
   }
 
   async function handleExportPDF() {
@@ -194,16 +252,49 @@ function App() {
     if (!confirm('全ての入力内容をクリアして初期化しますか？')) return
     setData(defaultData)
     localStorage.removeItem('resume_full_tdu')
+    setHasSavedData(false)
+  }
+
+  function handleSelectTemplate(templateType) {
+    setData((currentData) => ({
+      ...currentData,
+      templateType
+    }))
+    setCurrentView('editor')
+  }
+
+  const templateLabels = {
+    internship: 'インターン用',
+    employment: '就職用',
+    parttime: 'バイト用'
+  }
+  const selectedTemplateLabel =
+    templateLabels[data.templateType] || templateLabels.employment
+
+  if (currentView === 'home') {
+    return (
+      <Home
+        hasSavedData={hasSavedData}
+        onContinue={() => setCurrentView('editor')}
+        onSelectTemplate={handleSelectTemplate}
+      />
+    )
   }
 
   return (
     <div className="app-container">
       <header className="app-header">
         <div className="header-brand">
-          <span className="badge">Standard JIS</span>
+          <span className="badge">{selectedTemplateLabel}</span>
           <h1>履歴書 作成ツール</h1>
         </div>
         <div className="header-actions">
+          <button className="btn btn-secondary" onClick={() => setCurrentView('home')}>
+            <svg className="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3V11Zm2 1v7h3v-6h8v6h3v-7l-7-6.2L5 12Z" />
+            </svg>
+            ホーム
+          </button>
           <button className="btn btn-danger" onClick={handleReset}>
             初期化
           </button>

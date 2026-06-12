@@ -22,6 +22,62 @@ export default function ResumeForm({ data, onChange, onSave }) {
     })
   }
 
+  function calculateAge(birthDate, referenceDate) {
+    const birthYear = Number(birthDate?.year)
+    const birthMonth = Number(birthDate?.month)
+    const birthDay = Number(birthDate?.day)
+    const referenceYear = Number(referenceDate?.year)
+    const referenceMonth = Number(referenceDate?.month)
+    const referenceDay = Number(referenceDate?.day)
+
+    if (
+      !birthYear || !birthMonth || !birthDay ||
+      !referenceYear || !referenceMonth || !referenceDay
+    ) {
+      return ''
+    }
+
+    let age = referenceYear - birthYear
+    if (
+      referenceMonth < birthMonth ||
+      (referenceMonth === birthMonth && referenceDay < birthDay)
+    ) {
+      age -= 1
+    }
+
+    return age >= 0 ? String(age) : ''
+  }
+
+  function updateResumeDate(field, value) {
+    const resumeDate = {
+      ...(data.resumeDate || {}),
+      [field]: value
+    }
+    const age = calculateAge(data.birthDate, resumeDate)
+
+    onChange({
+      ...data,
+      resumeDate,
+      birthDate: {
+        ...(data.birthDate || {}),
+        age
+      }
+    })
+  }
+
+  function updateBirthDate(field, value) {
+    const birthDate = {
+      ...(data.birthDate || {}),
+      [field]: value
+    }
+    birthDate.age = calculateAge(birthDate, data.resumeDate)
+
+    onChange({
+      ...data,
+      birthDate
+    })
+  }
+
   // Helper to update grid row items
   function updateGridItem(idx, field, value) {
     const nextGrid = [...(data.gridItems || [])]
@@ -135,7 +191,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                       className={styles.inputShort}
                       placeholder="2026"
                       value={data.resumeDate?.year || ''}
-                      onChange={(e) => updateNestedField('resumeDate', 'year', e.target.value)}
+                      onChange={(e) => updateResumeDate('year', e.target.value)}
                     />
                     <span>年</span>
                     <input
@@ -143,7 +199,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                       className={styles.inputTiny}
                       placeholder="6"
                       value={data.resumeDate?.month || ''}
-                      onChange={(e) => updateNestedField('resumeDate', 'month', e.target.value)}
+                      onChange={(e) => updateResumeDate('month', e.target.value)}
                     />
                     <span>月</span>
                     <input
@@ -151,7 +207,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                       className={styles.inputTiny}
                       placeholder="13"
                       value={data.resumeDate?.day || ''}
-                      onChange={(e) => updateNestedField('resumeDate', 'day', e.target.value)}
+                      onChange={(e) => updateResumeDate('day', e.target.value)}
                     />
                     <span>日現在</span>
                   </div>
@@ -275,7 +331,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                   className={styles.inputShort}
                   placeholder="2004"
                   value={data.birthDate?.year || ''}
-                  onChange={(e) => updateNestedField('birthDate', 'year', e.target.value)}
+                  onChange={(e) => updateBirthDate('year', e.target.value)}
                 />
                 <span>年</span>
                 <input
@@ -283,7 +339,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                   className={styles.inputTiny}
                   placeholder="4"
                   value={data.birthDate?.month || ''}
-                  onChange={(e) => updateNestedField('birthDate', 'month', e.target.value)}
+                  onChange={(e) => updateBirthDate('month', e.target.value)}
                 />
                 <span>月</span>
                 <input
@@ -291,7 +347,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                   className={styles.inputTiny}
                   placeholder="1"
                   value={data.birthDate?.day || ''}
-                  onChange={(e) => updateNestedField('birthDate', 'day', e.target.value)}
+                  onChange={(e) => updateBirthDate('day', e.target.value)}
                 />
                 <span>日生</span>
               </div>
@@ -578,7 +634,15 @@ export default function ResumeForm({ data, onChange, onSave }) {
         {/* Global Save Button at bottom of form */}
         <div className={styles.formFooterActions}>
           <button type="submit" className={styles.btnSave}>
-            💾 一時保存する
+            <svg
+              className={styles.saveIcon}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M4 3h13l3 3v15H4V3Zm2 2v14h12V7l-2-2H6Z" />
+              <path d="M8 5h7v5H8V5Zm1.5 1.5v2h4v-2h-4ZM8 13h8v4H8v-4Z" />
+            </svg>
+            一時保存する
           </button>
         </div>
       </form>

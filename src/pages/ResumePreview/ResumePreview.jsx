@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import { useState } from 'react'
 import styles from './ResumePreview.module.css'
 
