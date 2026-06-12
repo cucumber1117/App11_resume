@@ -38,8 +38,32 @@ export default function ResumeForm({ data, onChange, onSave }) {
     onChange(next)
   }
 
+  function handleFileChange(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => updateField('photo', reader.result)
+    reader.readAsDataURL(file)
+  }
+
+  function handlePaste(e) {
+    const items = e.clipboardData && e.clipboardData.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.indexOf('image') !== -1) {
+        const blob = item.getAsFile()
+        const reader = new FileReader()
+        reader.onload = () => updateField('photo', reader.result)
+        reader.readAsDataURL(blob)
+        e.preventDefault()
+        return
+      }
+    }
+  }
+
   return (
-    <form className={styles.resumeForm} onSubmit={(e) => { e.preventDefault(); onSave(local) }}>
+    <form className={styles.resumeForm} onSubmit={(e) => { e.preventDefault(); onSave(local) }} onPaste={handlePaste}>
       <label className={styles.label}>
         氏名
         <input className={styles.input} value={local.name || ''} onChange={(e) => updateField('name', e.target.value)} />
@@ -53,6 +77,25 @@ export default function ResumeForm({ data, onChange, onSave }) {
       <label className={styles.label}>
         連絡先
         <input className={styles.input} value={local.contact || ''} onChange={(e) => updateField('contact', e.target.value)} />
+      </label>
+
+      <label className={styles.label}>
+        用途
+        <select className={styles.input} value={local.type || 'job'} onChange={(e) => updateField('type', e.target.value)}>
+          <option value="job">就職用</option>
+          <option value="intern">インターン用</option>
+          <option value="parttime">バイト用</option>
+        </select>
+      </label>
+
+      <label className={styles.label}>
+        証明写真（アップロード / 貼り付け可）
+        <input className={styles.input} type="file" accept="image/*" onChange={handleFileChange} />
+        {local.photo && (
+          <div style={{ marginTop: 8 }}>
+            <img src={local.photo} alt="photo" style={{ width: 96, height: 120, objectFit: 'cover', border: '1px solid #ddd' }} />
+          </div>
+        )}
       </label>
 
       <label className={styles.label}>

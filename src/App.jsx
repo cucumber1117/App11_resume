@@ -10,6 +10,8 @@ const defaultData = {
   summary: '',
   experiences: [],
   education: '',
+  type: 'job',
+  template: 'classic',
 }
 
 function App() {
@@ -35,6 +37,20 @@ function App() {
     w.print()
   }
 
+  function handleDownloadPDF() {
+    const el = document.getElementById('resume-preview')
+    if (!el) return
+    const w = window.open('', '_blank')
+    w.document.write('<html><head><title>Resume PDF</title>')
+    w.document.write('<style>body{font-family:system-ui, -apple-system, "Helvetica Neue", Arial; padding:20px} .resume-sheet{max-width:800px;margin:0 auto}</style>')
+    w.document.write('</head><body>')
+    w.document.write(el.innerHTML)
+    w.document.write('</body></html>')
+    w.document.close()
+    w.focus()
+    setTimeout(() => w.print(), 300)
+  }
+
   function handleReset() {
     if (!confirm('内容を初期化しますか？')) return
     setData(defaultData)
@@ -46,9 +62,18 @@ function App() {
       <h1>履歴書作成アプリ</h1>
       <div className="workspace-grid">
         <div className="left">
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', marginBottom: 6 }}>テンプレート</label>
+            <select value={data.template || 'classic'} onChange={(e) => setData({ ...data, template: e.target.value })}>
+              <option value="classic">クラシック</option>
+              <option value="simple">シンプル</option>
+              <option value="modern">モダン</option>
+            </select>
+          </div>
           <ResumeForm data={data} onChange={setData} onSave={handleSave} />
           <div className="small-actions">
             <button onClick={handlePrint}>プレビューを印刷</button>
+            <button onClick={handleDownloadPDF}>PDFダウンロード</button>
             <button onClick={handleReset}>初期化</button>
           </div>
         </div>
