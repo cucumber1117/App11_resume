@@ -1,121 +1,62 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
+import ResumeForm from './pages/ResumeForm/ResumeForm'
+import ResumePreview from './pages/ResumePreview./ResumePreview'
+
+const defaultData = {
+  name: '',
+  title: '',
+  contact: '',
+  summary: '',
+  experiences: [],
+  education: '',
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [data, setData] = useState(() => JSON.parse(localStorage.getItem('resume') || 'null') || defaultData)
+
+  function handleSave(d) {
+    localStorage.setItem('resume', JSON.stringify(d))
+    alert('履歴書を保存しました')
+  }
+
+  function handlePrint() {
+    const el = document.getElementById('resume-preview')
+    if (!el) return
+    const w = window.open('', '_blank')
+    w.document.write('<html><head><title>Resume</title>')
+    // basic styles to keep the print readable
+    w.document.write('<style>body{font-family:system-ui, -apple-system, \"Helvetica Neue\", Arial; padding:20px} .resume-sheet{max-width:800px;margin:0 auto}</style>')
+    w.document.write('</head><body>')
+    w.document.write(el.innerHTML)
+    w.document.write('</body></html>')
+    w.document.close()
+    w.focus()
+    w.print()
+  }
+
+  function handleReset() {
+    if (!confirm('内容を初期化しますか？')) return
+    setData(defaultData)
+    localStorage.removeItem('resume')
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app-container">
+      <h1>履歴書作成アプリ</h1>
+      <div className="workspace-grid">
+        <div className="left">
+          <ResumeForm data={data} onChange={setData} onSave={handleSave} />
+          <div className="small-actions">
+            <button onClick={handlePrint}>プレビューを印刷</button>
+            <button onClick={handleReset}>初期化</button>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+        <div className="right">
+          <ResumePreview data={data} />
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      </div>
+    </div>
   )
 }
 

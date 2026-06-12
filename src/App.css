@@ -182,3 +182,54 @@
     border-right-color: var(--border);
   }
 }
+
+/* Resume app styles */
+.app-container {
+  padding: 24px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.resume-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.resume-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resume-form input,
+.resume-form textarea {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.form-actions { margin-top: 12px }
+
+.resume-preview { border: 1px solid var(--border); padding: 16px; background: var(--bg) }
+
+.resume-sheet { max-width: 800px; margin: 0 auto; text-align: left }
+.r-header { display:flex; justify-content:space-between; align-items:flex-end }
+.r-name { margin: 0; font-size: 28px }
+.r-meta { text-align: right }
+.r-section { margin-top: 12px }
+.r-exp { margin-bottom: 8px }
+
+/* Print-specific: when printing, show only the resume sheet */
+@media print {
+  body * { visibility: hidden }
+  #resume-preview, #resume-preview * { visibility: visible }
+  #resume-preview { position: absolute; left: 0; top: 0; width: 100% }
+}
