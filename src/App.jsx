@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import ResumeForm from './pages/ResumeForm/ResumeForm'
-import ResumePreview from './pages/ResumePreview./ResumePreview'
+import ResumePreview from './pages/ResumePreview/ResumePreview'
 
 const defaultData = {
   name: '',
