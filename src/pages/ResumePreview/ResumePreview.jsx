@@ -25,24 +25,28 @@ export default function ResumePreview({ data }) {
 
   return (
     <div id="resume-preview" className={styles.previewContainer}>
-      <div className={styles.sheetsWrapper}>
-        {/* Page Navigation */}
-        <div className={styles.pageNav}>
-          <button
-            className={`${styles.pageNavBtn} ${currentPage === 0 ? styles.pageNavBtnActive : ''}`}
-            onClick={() => setCurrentPage(0)}
-          >
-            1ページ目
-          </button>
-          <button
-            className={`${styles.pageNavBtn} ${currentPage === 1 ? styles.pageNavBtnActive : ''}`}
-            onClick={() => setCurrentPage(1)}
-          >
-            2ページ目
-          </button>
-          <span className={styles.pageIndicator}>{currentPage + 1} / 2</span>
-        </div>
+      {/* Page Navigation */}
+      <div className={styles.pageNav}>
+        <button
+          type="button"
+          className={`${styles.pageNavBtn} ${currentPage === 0 ? styles.pageNavBtnActive : ''}`}
+          onClick={() => setCurrentPage(0)}
+          aria-pressed={currentPage === 0}
+        >
+          1ページ目
+        </button>
+        <button
+          type="button"
+          className={`${styles.pageNavBtn} ${currentPage === 1 ? styles.pageNavBtnActive : ''}`}
+          onClick={() => setCurrentPage(1)}
+          aria-pressed={currentPage === 1}
+        >
+          2ページ目
+        </button>
+        <span className={styles.pageIndicator}>{currentPage + 1} / 2</span>
+      </div>
 
+      <div className={styles.sheetsWrapper}>
         {/* ================= PAGE 1: 履歴書 1ページ目 ================= */}
         <div className={`${styles.a4Sheet} ${currentPage === 0 ? styles.pageActive : styles.pageHidden}`} data-sheet="a4">
           
@@ -229,15 +233,6 @@ export default function ResumePreview({ data }) {
         </div>
       </div>
 
-      {/* Reference panel for template images (screen-only) */}
-      <div className={styles.refPanel}>
-        <div className={styles.refPanelHeader}>参照テンプレート</div>
-        {d.referenceImage ? (
-          <img src={d.referenceImage} alt="参考テンプレート" className={styles.refImage} />
-        ) : (
-          <div style={{fontSize:12,color:'#666'}}>ここに参考の履歴書画像をアップロードすると、右側に表示されます。フォームで「参照テンプレートをアップロード」を使ってください。</div>
-        )}
-      </div>
     </div>
   )
 }

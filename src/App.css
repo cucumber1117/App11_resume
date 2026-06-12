@@ -291,6 +291,13 @@
   font-size: 14.5px;
 }
 
+.btn-icon {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
 /* Grid & Workspace */
 .workspace-grid {
   display: grid;
@@ -341,4 +348,3 @@
 .hero, #center, #next-steps, #spacer {
   display: none !important;
 }
-

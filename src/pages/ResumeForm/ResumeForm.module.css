@@ -1,6 +1,7 @@
 /* ResumeForm.module.css - Tabbed Form Layout Styles */
 
 .formContainer {
+  container-type: inline-size;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -49,6 +50,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 .tabSection {
@@ -70,15 +72,24 @@
   color: var(--text-h);
   border-left: 4px solid var(--accent);
   padding-left: 8px;
+  text-align: left;
+}
+
+.subSectionTitle {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 14px;
+  text-align: left;
 }
 
 .formGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+  min-width: 0;
 }
 
-@media (max-width: 768px) {
+@container (max-width: 900px) {
   .formGrid {
     grid-template-columns: 1fr;
   }
@@ -88,6 +99,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 /* Input Fields */
@@ -99,6 +111,14 @@
   font-weight: 500;
   color: var(--text-h);
   text-align: left;
+  min-width: 0;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .input {
@@ -141,10 +161,19 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.dateInputs span {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .inputShort {
   width: 70px;
+  min-width: 58px;
+  flex: 1 1 70px;
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -152,10 +181,13 @@
   font-size: 14px;
   background: var(--bg);
   color: var(--text-h);
+  box-sizing: border-box;
 }
 
 .inputTiny {
   width: 45px;
+  min-width: 40px;
+  flex: 1 1 45px;
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -163,12 +195,14 @@
   font-size: 14px;
   background: var(--bg);
   color: var(--text-h);
+  box-sizing: border-box;
 }
 
 .genderDobRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
 }
 
 /* Certificate Photo area */
@@ -180,8 +214,99 @@
 }
 
 .fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.photoDropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 150px;
+  padding: 18px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  box-sizing: border-box;
+  background: var(--code-bg);
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.photoDropZoneActive {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.photoDropText {
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.photoDropSubText {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.photoSelectBtn {
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--accent);
   font-size: 12px;
-  max-width: 100%;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.photoSelectBtn:hover {
+  background: var(--accent-bg);
+}
+
+.photoThumbnail {
+  width: 60px;
+  height: 80px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.photoError {
+  color: #cf1322;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+@container (max-width: 480px) {
+  .formBody {
+    padding: 16px;
+  }
+
+  .genderDobRow {
+    grid-template-columns: 1fr;
+  }
+
+  .dateInputs {
+    gap: 4px;
+  }
+
+  .inputShort {
+    min-width: 52px;
+  }
+
+  .inputTiny {
+    min-width: 36px;
+  }
 }
 
 .btnDangerSmall {

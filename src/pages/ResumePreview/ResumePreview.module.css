@@ -2,9 +2,13 @@
 
 .previewContainer {
   display: flex;
-  flex-direction: row; /* show sheets left and reference panel right */
-  gap: 20px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
   background: #f0f0f2;
   padding: 20px 10px;
   border-radius: 8px;
@@ -15,36 +19,69 @@
   flex-direction: column;
   gap: 30px;
   align-items: center;
+  width: 210mm;
+  flex: 0 0 auto;
 }
 
-.refPanel {
-  width: 300px;
-  max-height: calc(100vh - 80px);
+.pageNav {
   position: sticky;
-  top: 20px;
-  background: #ffffff;
-  border: 1px solid #dddddd;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  box-sizing: border-box;
+  top: 10px;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: stretch;
+  width: auto;
+  min-height: 42px;
+  padding: 6px;
+  border: 1px solid #d8dbe2;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
 }
 
-.refPanelHeader {
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eeeeee;
-  color: #333333;
-  font-family: sans-serif;
+.pageNavBtn {
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #555555;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.refImage {
-  width: 100%;
-  height: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+.pageNavBtn:hover {
+  background: #f2edff;
+  color: #7a2cff;
+}
+
+.pageNavBtn:focus-visible {
+  outline: 2px solid #9a4dff;
+  outline-offset: 2px;
+}
+
+.pageNavBtnActive {
+  border-color: #9a4dff;
+  background: #9a4dff;
+  color: #ffffff;
+}
+
+.pageNavBtnActive:hover {
+  background: #8a35f3;
+  color: #ffffff;
+}
+
+.pageIndicator {
+  min-width: 42px;
+  padding: 0 6px;
+  color: #555555;
+  font-size: 12px;
+  text-align: center;
 }
 
 /* ================= A4 Sheet Common Styling ================= */
@@ -436,6 +473,14 @@
   .a4Sheet {
     box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   }
+
+  .pageActive {
+    display: block;
+  }
+
+  .pageHidden {
+    display: none;
+  }
 }
 
 @media print {
@@ -471,8 +516,14 @@
     gap: 0 !important;
   }
 
-  /* Hide reference panel when printing */
-  .refPanel { display: none !important; }
+  .pageNav {
+    display: none !important;
+  }
+
+  .pageActive,
+  .pageHidden {
+    display: block !important;
+  }
 
   .a4Sheet {
     visibility: visible;
@@ -507,9 +558,6 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-
-  /* Hide the reference panel */
-  .refPanel { display: none !important; }
 
   /* Make sure tables keep their layout in print */
   .historyTable, .licenseTable, .personalTable, .addressTable {

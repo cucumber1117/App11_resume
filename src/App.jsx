@@ -68,8 +68,6 @@ const defaultData = {
   // 本人希望記入欄
   personalRequest: '',
   
-  // 参照テンプレート画像
-  referenceImage: '',
 }
 
 function App() {
@@ -140,6 +138,8 @@ function App() {
         // Force cloned element to A4 CSS width so layout matches print size
         clone.style.width = `${a4WidthPx}px`
         clone.style.maxWidth = `${a4WidthPx}px`
+        clone.style.height = `${a4HeightPx}px`
+        clone.style.display = 'block'
 
         const wrapper = document.createElement('div')
         wrapper.style.position = 'fixed'
@@ -208,7 +208,15 @@ function App() {
             初期化
           </button>
           <button className="btn btn-primary btn-lg" onClick={handleExportPDF}>
-            <span>📄</span> PDFダウンロード
+            <svg
+              className="btn-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M6 2.75h8l4 4V13h-1.5V7.5h-3.25V4.25H7.5V13H6V2.75Z" />
+              <path d="M12 11.5v7.1l2.45-2.45 1.05 1.05-4.25 4.25L7 17.2l1.05-1.05 2.45 2.45v-7.1H12Z" />
+            </svg>
+            PDFダウンロード
           </button>
         </div>
       </header>

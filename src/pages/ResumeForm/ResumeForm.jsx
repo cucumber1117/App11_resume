@@ -3,6 +3,8 @@ import styles from './ResumeForm.module.css'
 
 export default function ResumeForm({ data, onChange, onSave }) {
   const [activeTab, setActiveTab] = useState('basic')
+  const [isPhotoDragging, setIsPhotoDragging] = useState(false)
+  const [photoError, setPhotoError] = useState('')
 
   // Helper to update flat fields
   function updateField(field, value) {
@@ -40,6 +42,20 @@ export default function ResumeForm({ data, onChange, onSave }) {
     onChange({ ...data, licenseItems: nextLicense })
   }
 
+  function loadPhoto(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      setPhotoError('画像ファイルを選択してください。')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      updateField('photo', reader.result)
+      setPhotoError('')
+    }
+    reader.readAsDataURL(file)
+  }
+
   // Paste image handler for certificate photo
   function handlePaste(e) {
     const items = e.clipboardData && e.clipboardData.items
@@ -47,10 +63,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
       if (item.type.indexOf('image') !== -1) {
-        const blob = item.getAsFile()
-        const reader = new FileReader()
-        reader.onload = () => updateField('photo', reader.result)
-        reader.readAsDataURL(blob)
+        loadPhoto(item.getAsFile())
         e.preventDefault()
         return
       }
@@ -60,10 +73,14 @@ export default function ResumeForm({ data, onChange, onSave }) {
   // Handle file select
   function handleFileChange(e) {
     const file = e.target.files && e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => updateField('photo', reader.result)
-    reader.readAsDataURL(file)
+    loadPhoto(file)
+    e.target.value = ''
+  }
+
+  function handlePhotoDrop(e) {
+    e.preventDefault()
+    setIsPhotoDragging(false)
+    loadPhoto(e.dataTransfer.files && e.dataTransfer.files[0])
   }
 
   return (
@@ -164,15 +181,51 @@ export default function ResumeForm({ data, onChange, onSave }) {
               </div>
 
               <div className={styles.formCol}>
-                <label className={styles.label}>
-                  証明写真 (アップロード / 貼り付け)
-                  <div className={styles.photoControl}>
+                <div className={styles.label}>
+                  証明写真
+                  <div
+                    className={`${styles.photoDropZone} ${isPhotoDragging ? styles.photoDropZoneActive : ''}`}
+                    onDragEnter={(e) => {
+                      e.preventDefault()
+                      setIsPhotoDragging(true)
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = 'copy'
+                    }}
+                    onDragLeave={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget)) {
+                        setIsPhotoDragging(false)
+                      }
+                    }}
+                    onDrop={handlePhotoDrop}
+                  >
+                    <span className={styles.photoDropText}>
+                      画像をここにドラッグ＆ドロップ
+                    </span>
+                    <span className={styles.photoDropSubText}>
+                      またはクリックして選択・画像を貼り付け
+                    </span>
                     <input
+                      id="resume-photo"
                       type="file"
                       accept="image/*"
                       className={styles.fileInput}
                       onChange={handleFileChange}
                     />
+                    <label htmlFor="resume-photo" className={styles.photoSelectBtn}>
+                      写真を選択
+                    </label>
+                    {data.photo && (
+                      <img
+                        src={data.photo}
+                        alt="選択中の証明写真"
+                        className={styles.photoThumbnail}
+                      />
+                    )}
+                  </div>
+                  {photoError && <span className={styles.photoError}>{photoError}</span>}
+                  <div className={styles.photoControl}>
                     {data.photo && (
                       <button
                         type="button"
@@ -183,34 +236,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                       </button>
                     )}
                   </div>
-                </label>
-
-                <label className={styles.label}>
-                  参照テンプレートをアップロード (右側に表示)
-                  <div className={styles.photoControl}>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      className={styles.fileInput}
-                      onChange={(e) => {
-                        const file = e.target.files && e.target.files[0]
-                        if (!file) return
-                        const reader = new FileReader()
-                        reader.onload = () => updateField('referenceImage', reader.result)
-                        reader.readAsDataURL(file)
-                      }}
-                    />
-                    {data.referenceImage && (
-                      <button
-                        type="button"
-                        className={styles.btnDangerSmall}
-                        onClick={() => updateField('referenceImage', '')}
-                      >
-                        参照テンプレートを削除
-                      </button>
-                    )}
-                  </div>
-                </label>
+                </div>
 
                 <div className={styles.genderDobRow}>
                   <label className={styles.label}>
