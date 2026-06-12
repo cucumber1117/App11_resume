@@ -175,6 +175,34 @@ export default function ResumeForm({ data, onChange, onSave }) {
                   </div>
                 </label>
 
+                <label className={styles.label}>
+                  参照テンプレートをアップロード (右側に表示)
+                  <div className={styles.photoControl}>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className={styles.fileInput}
+                      onChange={(e) => {
+                        const file = e.target.files && e.target.files[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = () => updateField('referenceImage', reader.result)
+                        // For PDFs we can still show an embedded preview if supported by browser as data URL
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                    {data.referenceImage && (
+                      <button
+                        type="button"
+                        className={styles.btnDangerSmall}
+                        onClick={() => updateField('referenceImage', '')}
+                      >
+                        参照テンプレートを削除
+                      </button>
+                    )}
+                  </div>
+                </label>
+
                 <div className={styles.genderDobRow}>
                   <label className={styles.label}>
                     性別
@@ -427,7 +455,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
         {/* ================= TAB 3: 東京電機大学・卒業研究 ================= */}
         {activeTab === 'research' && (
           <div className={styles.tabSection}>
-            <h3 className={styles.sectionTitle}>東京電機大学 学業情報</h3>
+            <h3 className={styles.sectionTitle}>{data.uniName || data.universityName || '大学名を入力'} 学業情報</h3>
             
             <div className={styles.formGrid}>
               <div className={styles.formCol}>
@@ -451,6 +479,17 @@ export default function ResumeForm({ data, onChange, onSave }) {
                     />
                     <span>月</span>
                   </div>
+                </label>
+
+                <label className={styles.label}>
+                  大学名
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="東京電機大学"
+                    value={data.uniName || data.universityName || ''}
+                    onChange={(e) => updateField('uniName', e.target.value)}
+                  />
                 </label>
 
                 <label className={styles.label}>

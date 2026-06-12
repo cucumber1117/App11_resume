@@ -2,28 +2,51 @@
 
 .previewContainer {
   display: flex;
-  flex-direction: column;
-  gap: 30px;
-  align-items: center;
+  flex-direction: row; /* show sheets left and reference panel right */
+  gap: 20px;
+  align-items: flex-start;
   background: #f0f0f2;
-  padding: 30px 10px;
+  padding: 20px 10px;
   border-radius: 8px;
 }
 
-/* Base A4 Sheet styling for screen preview */
-.a4Sheet {
-  width: 210mm;
-  height: 297mm;
-  padding: 15mm 15mm;
-  box-sizing: border-box;
-  background: #ffffff;
-  color: #000000;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+.sheetsWrapper {
   display: flex;
   flex-direction: column;
-  position: relative;
-  font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
-  font-size: 13.5px;
+  gap: 30px;
+  align-items: center;
+}
+
+.refPanel {
+  width: 300px;
+  max-height: calc(100vh - 80px);
+    /* Only render the actual A4 sheets for print; hide all other UI */
+    body * {
+      visibility: hidden;
+    }
+
+    .a4Sheet, .a4Sheet * {
+      visibility: visible;
+    }
+
+    /* Ensure sheets layout properly for print (centered, no UI chrome) */
+    .a4Sheet {
+      position: relative;
+      left: auto;
+      top: auto;
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto;
+      padding: 15mm 15mm;
+      box-shadow: none !important;
+      page-break-after: always !important;
+      page-break-inside: avoid !important;
+      box-sizing: border-box;
+      overflow: visible !important;
+      background: #ffffff !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
   line-height: 1.4;
   overflow: hidden;
 }
@@ -50,7 +73,7 @@
 /* Personal Details block (Name, DOB, gender) */
 .personalBlock {
   display: flex;
-  border: 1px solid #000000;
+  border: 2px solid #000000;
   border-bottom: none;
   height: 106px; /* strict height constraint */
   box-sizing: border-box;
@@ -60,7 +83,7 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  width: calc(100% - 75px); /* photo is 75px width (24-30mm) */
+  width: calc(100% - 86px); /* photo area reserved */
 }
 
 .rowFurigana {
@@ -101,7 +124,7 @@
 }
 
 .personalRightPhoto {
-  width: 85px;
+  width: 86px;
   border-left: 1px solid #000000;
   display: flex;
   justify-content: center;
@@ -112,8 +135,11 @@
 
 .uploadedPhoto {
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: 100%;
   object-fit: cover;
+  display: block;
+  image-rendering: auto;
 }
 
 .photoPlaceholder {
@@ -124,7 +150,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-size: 8px;
+  font-size: 10px;
   color: #777777;
   text-align: center;
   line-height: 1.3;
@@ -192,7 +218,7 @@
 .addressBlock {
   display: flex;
   flex-direction: column;
-  border: 1px solid #000000;
+  border: 2px solid #000000;
   box-sizing: border-box;
 }
 
@@ -333,11 +359,11 @@
 }
 
 .colYear {
-  width: 50px;
+  width: 60px;
 }
 
 .colMonth {
-  width: 40px;
+  width: 50px;
 }
 
 .colContent {
@@ -383,7 +409,7 @@
 
 /* Top Graduation Details Block */
 .uniGradBlock {
-  border: 1px solid #000000;
+  border: 2px solid #000000;
   height: 38px;
   display: flex;
   align-items: center;
@@ -423,7 +449,7 @@
 .selfIntroProfile {
   display: flex;
   flex-direction: column;
-  border: 1px solid #000;
+  border: 2px solid #000;
   margin-bottom: 12px;
   box-sizing: border-box;
 }
@@ -499,7 +525,7 @@
 .researchContainer {
   display: flex;
   flex-direction: column;
-  border: 1px solid #000;
+  border: 2px solid #000;
   margin-bottom: 15px;
   box-sizing: border-box;
 }
@@ -576,7 +602,7 @@
 .gridFormRows {
   display: flex;
   flex-direction: column;
-  border: 1px solid #000;
+  border: 2px solid #000;
   border-bottom: none;
   box-sizing: border-box;
   flex-grow: 1; /* stretches to fill remaining height */
@@ -635,6 +661,35 @@
 
 /* ================= PRINT CSS RULES ================= */
 
+/* Screen preview tweaks: improve image rendering and vertical spacing */
+@media screen {
+  .previewContainer {
+    padding: 24px;
+  }
+
+  .sheetsWrapper {
+    gap: 36px;
+  }
+
+  .a4Sheet {
+    padding: 18mm 15mm;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  /* Relax strict heights on screen so content breathes */
+  .personalBlock { height: auto; padding: 8px 0; }
+  .rowFurigana, .rowName, .rowBirth { height: auto; padding: 6px 8px; align-items: center; }
+  .addressRow, .contactCell { height: auto; padding: 6px 8px; }
+  .historyRow { height: auto; padding: 6px 0; }
+
+  /* Slightly increased line-height for readability */
+  .boxText, .researchBodyText { line-height: 1.6; }
+
+  /* Constrain displayed photo to avoid upscaling and blurriness */
+  .photoPlaceholder, .uploadedPhoto { max-width: 80px; max-height: 100px; }
+  .personalRightPhoto { padding: 6px; }
+}
+
 @media print {
   /* Setup page boundaries */
   @page {
@@ -668,6 +723,9 @@
     gap: 0 !important;
   }
 
+  /* Hide reference panel when printing */
+  .refPanel { display: none !important; }
+
   .a4Sheet {
     visibility: visible;
     width: 210mm;
@@ -698,6 +756,20 @@
 
   .boxTitle, .researchBodyTitle {
     background-color: #fbfbfd !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide the reference panel and any editor chrome */
+  .refPanel { display: none !important; }
+
+  /* Make sure tables keep their layout in print */
+  .historyTable {
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  .historyTable th, .historyTable td {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

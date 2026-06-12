@@ -26,9 +26,9 @@ export default function ResumePreview({ data }) {
 
   return (
     <div id="resume-preview" className={styles.previewContainer}>
-      
+      <div className={styles.sheetsWrapper}>
       {/* ================= PAGE 1: 履歴書 ================= */}
-      <div className={styles.a4Sheet}>
+      <div className={styles.a4Sheet} data-sheet="a4">
         {/* Top Date Header */}
         <div className={styles.dateHeader}>
           {d.resumeDate?.year || '　　'} 年 {d.resumeDate?.month || '　'} 月 {d.resumeDate?.day || '　'} 日現在
@@ -172,7 +172,7 @@ export default function ResumePreview({ data }) {
       </div>
 
       {/* ================= PAGE 2: 自己紹介書 ================= */}
-      <div className={styles.a4Sheet}>
+      <div className={styles.a4Sheet} data-sheet="a4">
         {/* Top Date Header */}
         <div className={styles.dateHeader}>
           {selfIntroDateYear || '　　'} 年 {selfIntroDateMonth || '　'} 月 {selfIntroDateDay || '　'} 日現在
@@ -188,7 +188,7 @@ export default function ResumePreview({ data }) {
           <div className={styles.uniGradContent}>
             <span>{d.uniYear || '　　'} 年</span>
             <span>{d.uniMonth || '　'} 月</span>
-            <span className={styles.uniNameText}>東京電機大学</span>
+            <span className={styles.uniNameText}>{d.uniName || d.universityName || '　　'}</span>
             <span className={styles.uniDeptText}>{d.uniDept || '　　　　　　　　　　'}</span>
             <span className={styles.uniStatusBadge}>{d.uniStatus || '見込'}</span>
           </div>
@@ -271,8 +271,19 @@ export default function ResumePreview({ data }) {
 
         {/* School Footer Branding */}
         <footer className={styles.selfIntroFooter}>
-          東京電機大学
+          {d.uniName || d.universityName || ''}
         </footer>
+      </div>
+      </div>
+
+      {/* Reference panel for template images (screen-only) */}
+      <div className={styles.refPanel}>
+        <div className={styles.refPanelHeader}>参照テンプレート</div>
+        {d.referenceImage ? (
+          <img src={d.referenceImage} alt="参考テンプレート" className={styles.refImage} />
+        ) : (
+          <div style={{fontSize:12,color:'#666'}}>ここに参考の履歴書画像をアップロードすると、右側に表示されます。フォームで「参照テンプレートをアップロード」を使ってください。</div>
+        )}
       </div>
 
     </div>
