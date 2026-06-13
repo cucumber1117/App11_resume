@@ -6,6 +6,23 @@ import ResumePreview from './pages/ResumePreview/ResumePreview'
 
 const LEGACY_STORAGE_KEY = 'resume_full_tdu'
 const DRAFTS_STORAGE_KEY = 'resume_drafts_v1'
+let historyItemIdCounter = 0
+
+function createHistoryItemId() {
+  historyItemIdCounter += 1
+  return `history-${Date.now().toString(36)}-${historyItemIdCounter.toString(36)}`
+}
+
+function createHistoryItem(overrides = {}) {
+  return {
+    id: createHistoryItemId(),
+    year: '',
+    month: '',
+    content: '',
+    align: 'left',
+    ...overrides
+  }
+}
 
 const TEMPLATE_SECTION_PRESETS = {
   internship: {
@@ -157,27 +174,27 @@ const defaultData = {
 
   // 学歴・職歴 (プレビューでは最大21行)
   gridItems: [
-    { year: '', month: '', content: '学　　歴', align: 'center' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '職　　歴', align: 'center' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '以　　上', align: 'right' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '', align: 'left' },
+    createHistoryItem({ content: '学　　歴', align: 'center' }),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem({ content: '職　　歴', align: 'center' }),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem({ content: '以　　上', align: 'right' }),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
+    createHistoryItem(),
   ],
 
   // 免許・資格 (5行)
@@ -231,10 +248,13 @@ function normalizeHistoryItems(items = []) {
     }
 
     return true
-  })
+  }).map((item) => ({
+    ...item,
+    id: item.id || createHistoryItemId()
+  }))
 
   while (normalizedItems.length < 21) {
-    normalizedItems.push({ year: '', month: '', content: '', align: 'left' })
+    normalizedItems.push(createHistoryItem())
   }
 
   return normalizedItems.slice(0, 21)

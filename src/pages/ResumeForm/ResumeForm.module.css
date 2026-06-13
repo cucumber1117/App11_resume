@@ -528,17 +528,70 @@
   font-size: 12px;
 }
 
+.compactRowsButton {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compactRowsButton:hover {
+  background: var(--accent-bg);
+}
+
+.historyAddToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: -4px;
+}
+
+.historyAddButton {
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.historyAddButton:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.historyListMessage {
+  margin: -4px 0 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 12px;
+}
+
 .gridTableScroll {
-  max-height: 480px;
+  max-height: 390px;
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
+  background: var(--bg);
 }
 
 .editGridTable {
   width: 100%;
-  min-width: 720px;
+  min-width: 640px;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 13px;
 }
 
@@ -550,41 +603,138 @@
   border-bottom: 2px solid var(--border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 2;
 }
 
 .editGridTable td {
-  padding: 6px 8px;
+  height: 42px;
+  padding: 4px 5px;
   border-bottom: 1px solid var(--border);
 }
 
 .editGridTable tr:hover {
-  background: rgba(0, 0, 0, 0.01);
+  background: var(--code-bg);
+}
+
+.editGridTable tr:focus-within {
+  background: var(--accent-bg);
+}
+
+.headingEditRow {
+  background: #f4efff;
+}
+
+.headingEditRow td {
+  border-bottom-color: #ded1f5;
+}
+
+.headingEditRow .gridInputLeft {
+  border-color: transparent;
+  background: transparent;
+  font-weight: 700;
+  text-align: center;
+}
+
+.headingEditRow .rowNumberCell {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.headingEditRow:hover,
+.headingEditRow:focus-within {
+  background: #eee5ff !important;
+}
+
+.draggingRow {
+  position: relative;
+  z-index: 3;
+  background: #f7f2ff !important;
+  box-shadow: 0 8px 20px rgba(109, 40, 217, 0.18);
+  opacity: 0.55;
+}
+
+.dropTargetRow {
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+.dragHandleColumn {
+  width: 46px;
 }
 
 .rowNumberColumn {
-  width: 42px;
+  width: 36px;
 }
 
 .rowActionsColumn {
-  width: 112px;
+  width: 48px;
+}
+
+.dateColumn {
+  width: 168px;
+}
+
+.alignColumn {
+  width: 76px;
 }
 
 .rowNumberCell {
   color: var(--text);
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
+}
+
+.dragHandleCell {
+  padding: 0 !important;
+  text-align: center;
+}
+
+.dragHandle {
+  display: inline-grid;
+  width: 40px;
+  height: 38px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8c8796;
+  font-size: 20px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dragHandle:hover,
+.dragHandle:focus-visible {
+  background: var(--accent-bg);
+  color: var(--accent);
+  outline: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.compactDateInputs {
+  display: grid;
+  grid-template-columns: 54px auto 36px auto;
+  gap: 3px;
+  align-items: center;
+  color: var(--text);
+  font-size: 11px;
 }
 
 .rowActions {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .rowActionButton {
-  width: 28px;
   height: 28px;
+  min-width: 28px;
+  width: 28px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 5px;
@@ -592,6 +742,46 @@
   color: var(--text-h);
   font: inherit;
   cursor: pointer;
+  opacity: 0.48;
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.historyDragOverlay {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(520px, 76vw);
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #c8aef4;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text-h);
+  box-shadow: 0 12px 28px rgba(74, 35, 125, 0.24);
+  font-size: 13px;
+  opacity: 0.96;
+}
+
+.dragOverlayHandle {
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.editGridTable tr:hover .rowActionButton,
+.editGridTable tr:focus-within .rowActionButton {
+  opacity: 1;
 }
 
 .rowActionButton:hover:not(:disabled) {
@@ -601,12 +791,28 @@
 
 .rowActionButton:disabled {
   cursor: not-allowed;
-  opacity: 0.35;
+  opacity: 0.2 !important;
 }
 
 .rowDeleteButton:hover:not(:disabled) {
   border-color: #cf1322;
   color: #cf1322;
+}
+
+@container (max-width: 520px) {
+  .historyListHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .compactRowsButton {
+    width: 100%;
+  }
+
+  .historyAddToolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .gridInputCenter {
@@ -619,6 +825,14 @@
   background: var(--bg);
   color: var(--text-h);
   box-sizing: border-box;
+}
+
+.gridInputCenter:disabled,
+.gridSelect:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: transparent;
+  cursor: default;
 }
 
 .gridInputLeft {

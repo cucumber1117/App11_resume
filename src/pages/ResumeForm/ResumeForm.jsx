@@ -1,9 +1,42 @@
 import { useState } from 'react'
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import styles from './ResumeForm.module.css'
 
 const SELF_PR_MAX_LENGTH = 800
 const MOTIVATION_MAX_LENGTH = 800
 const PERSONAL_REQUEST_MAX_LENGTH = 400
+
+function createHistoryRow(overrides = {}) {
+  const id = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `history-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+  return {
+    id,
+    year: '',
+    month: '',
+    content: '',
+    align: 'left',
+    ...overrides
+  }
+}
 
 function formatPhoneNumber(value = '') {
   const digits = String(value).replace(/\D/g, '').slice(0, 11)
@@ -29,6 +62,158 @@ function formatPhoneNumber(value = '') {
     .join('-')
 }
 
+function isEmptyHistoryItem(item = {}) {
+  return item.kind !== 'heading' &&
+    !item.year &&
+    !item.month &&
+    !(item.content || '').trim()
+}
+
+function normalizeHistoryContent(content = '') {
+  return content.replaceAll('　', '').trim()
+}
+
+function isHistoryHeading(item = {}) {
+  const content = normalizeHistoryContent(item.content)
+  return item.kind === 'heading' || content === '学歴' || content === '職歴'
+}
+
+function getHistoryPlaceholder(items, index) {
+  let section = 'education'
+
+  for (let itemIndex = 0; itemIndex < index; itemIndex += 1) {
+    const content = normalizeHistoryContent(items[itemIndex]?.item?.content)
+    if (content === '学歴') section = 'education'
+    if (content === '職歴') section = 'work'
+  }
+
+  if (section === 'work') {
+    return index % 2 === 0 ? '株式会社○○ 入社' : '株式会社○○ 退職'
+  }
+
+  return index % 2 === 0 ? '○○高等学校 卒業' : '○○大学 入学'
+}
+
+function SortableHistoryRow({
+  entry,
+  index,
+  headingRow,
+  placeholder,
+  onUpdate,
+  onClear
+}) {
+  const { item, originalIndex } = entry
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver
+  } = useSortable({ id: item.id })
+  const rowStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  }
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={rowStyle}
+      className={[
+        headingRow ? styles.headingEditRow : '',
+        isDragging ? styles.draggingRow : '',
+        isOver && !isDragging ? styles.dropTargetRow : ''
+      ].filter(Boolean).join(' ')}
+    >
+      <td className={styles.dragHandleCell}>
+        <button
+          type="button"
+          className={styles.dragHandle}
+          aria-label={`${index + 1}行目を並び替え`}
+          title="ドラッグして並び替え"
+          {...attributes}
+          {...listeners}
+        >
+          ≡
+        </button>
+      </td>
+      <td className={styles.rowNumberCell}>{index + 1}</td>
+      <td>
+        <div className={styles.compactDateInputs}>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength="4"
+            className={styles.gridInputCenter}
+            aria-label={`${index + 1}行目の年`}
+            placeholder="2022"
+            disabled={headingRow}
+            value={item.year || ''}
+            onChange={(event) => onUpdate(
+              originalIndex,
+              'year',
+              event.target.value.replace(/\D/g, '')
+            )}
+          />
+          <span>年</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength="2"
+            className={styles.gridInputCenter}
+            aria-label={`${index + 1}行目の月`}
+            placeholder="4"
+            disabled={headingRow}
+            value={item.month || ''}
+            onChange={(event) => onUpdate(
+              originalIndex,
+              'month',
+              event.target.value.replace(/\D/g, '')
+            )}
+          />
+          <span>月</span>
+        </div>
+      </td>
+      <td>
+        <input
+          type="text"
+          className={styles.gridInputLeft}
+          placeholder={headingRow ? '見出しを入力' : placeholder}
+          value={item.content || ''}
+          onChange={(event) => onUpdate(originalIndex, 'content', event.target.value)}
+        />
+      </td>
+      <td>
+        <select
+          className={styles.gridSelect}
+          value={headingRow ? 'center' : (item.align || 'left')}
+          disabled={headingRow}
+          onChange={(event) => onUpdate(originalIndex, 'align', event.target.value)}
+        >
+          <option value="left">左</option>
+          <option value="center">中央</option>
+          <option value="right">右</option>
+        </select>
+      </td>
+      <td>
+        <div className={styles.rowActions}>
+          <button
+            type="button"
+            className={`${styles.rowActionButton} ${styles.rowDeleteButton}`}
+            onClick={() => onClear(originalIndex)}
+            aria-label={`${index + 1}行目を削除`}
+            title="削除"
+          >
+            ×
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
 export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [isPhotoDragging, setIsPhotoDragging] = useState(false)
@@ -46,6 +231,19 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
     completionStatus: '卒業'
   })
   const [educationEntryMessage, setEducationEntryMessage] = useState('')
+  const [historyListMessage, setHistoryListMessage] = useState('')
+  const [activeHistoryId, setActiveHistoryId] = useState(null)
+  const historySensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
   const showIntroTab =
     sections.motivation || sections.selfPR || sections.personalRequest
   const historyLabel = '学歴・職歴'
@@ -74,6 +272,9 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
       return true
     })
     .slice(0, sections.historyContinuation ? 21 : 14)
+  const activeHistoryEntry = visibleGridItems.find(
+    ({ item }) => item.id === activeHistoryId
+  )
 
   // Helper to update flat fields
   function updateField(field, value) {
@@ -150,40 +351,147 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
   // Helper to update grid row items
   function updateGridItem(idx, field, value) {
     const nextGrid = [...(data.gridItems || [])]
-    nextGrid[idx] = {
+    const nextItem = {
       ...nextGrid[idx],
       [field]: value
     }
+
+    if (field === 'content') {
+      const normalizedContent = normalizeHistoryContent(value)
+      if (normalizedContent === '学歴' || normalizedContent === '職歴') {
+        nextItem.year = ''
+        nextItem.month = ''
+        nextItem.align = 'center'
+        nextItem.kind = 'heading'
+      }
+    }
+
+    nextGrid[idx] = nextItem
+    setHistoryListMessage('')
     onChange({ ...data, gridItems: nextGrid })
   }
 
-  function moveGridItem(originalIndex, direction) {
-    const visibleIndex = visibleGridItems.findIndex(
-      (entry) => entry.originalIndex === originalIndex
-    )
-    const target = visibleGridItems[visibleIndex + direction]
-
-    if (!target) {
+  function handleHistoryDragEnd({ active, over }) {
+    setActiveHistoryId(null)
+    if (!over || active.id === over.id) {
       return
     }
 
+    const oldIndex = visibleGridItems.findIndex(({ item }) => item.id === active.id)
+    const newIndex = visibleGridItems.findIndex(({ item }) => item.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) {
+      return
+    }
+
+    const reorderedItems = arrayMove(
+      visibleGridItems.map(({ item }) => item),
+      oldIndex,
+      newIndex
+    )
+    const targetIndexes = visibleGridItems
+      .map(({ originalIndex }) => originalIndex)
+      .sort((left, right) => left - right)
     const nextGrid = [...(data.gridItems || [])]
-    ;[nextGrid[originalIndex], nextGrid[target.originalIndex]] = [
-      nextGrid[target.originalIndex],
-      nextGrid[originalIndex]
-    ]
+    targetIndexes.forEach((originalIndex, index) => {
+      nextGrid[originalIndex] = reorderedItems[index]
+    })
+
+    setHistoryListMessage('')
     onChange({ ...data, gridItems: nextGrid })
   }
 
   function clearGridItem(originalIndex) {
     const nextGrid = [...(data.gridItems || [])]
     nextGrid[originalIndex] = {
+      id: nextGrid[originalIndex]?.id || createHistoryRow().id,
       year: '',
       month: '',
       content: '',
-      align: 'left'
+      align: 'left',
+      kind: undefined
     }
+    setHistoryListMessage('')
     onChange({ ...data, gridItems: nextGrid })
+  }
+
+  function addHistoryListItem(type) {
+    const visibleCount = sections.historyContinuation ? 21 : 14
+    const currentGrid = [...(data.gridItems || [])]
+    while (currentGrid.length < 21) {
+      currentGrid.push(createHistoryRow())
+    }
+
+    const visibleItems = currentGrid.slice(0, visibleCount)
+    if (!visibleItems.some((item) => isEmptyHistoryItem(item))) {
+      setHistoryListMessage(
+        '空き行がありません。不要な行を削除するか、項目設定で続き欄を追加してください。'
+      )
+      return
+    }
+
+    const findContentIndex = (content) => visibleItems.findIndex(
+      (item) => normalizeHistoryContent(item.content) === content
+    )
+    const workHeadingIndex = findContentIndex('職歴')
+    const closingIndex = findContentIndex('以上')
+    const firstEmptyIndex = visibleItems.findIndex((item) => isEmptyHistoryItem(item))
+    let insertIndex = firstEmptyIndex
+    let newItem = createHistoryRow()
+
+    if (type === 'education') {
+      insertIndex = workHeadingIndex >= 0 ? workHeadingIndex : firstEmptyIndex
+    } else if (type === 'work') {
+      insertIndex = closingIndex >= 0 ? closingIndex : firstEmptyIndex
+    } else if (type === 'heading') {
+      newItem = createHistoryRow({
+        content: '',
+        align: 'center',
+        kind: 'heading'
+      })
+    } else if (type === 'closing') {
+      newItem = createHistoryRow({
+        content: '以　　上',
+        align: 'right'
+      })
+    }
+
+    visibleItems.splice(insertIndex, 0, newItem)
+    const removableIndex = visibleItems.findLastIndex((item) => isEmptyHistoryItem(item))
+    if (removableIndex < 0) {
+      setHistoryListMessage('行を追加できませんでした。空行を作ってから再度お試しください。')
+      return
+    }
+    visibleItems.splice(removableIndex, 1)
+
+    setHistoryListMessage('')
+    onChange({
+      ...data,
+      gridItems: [
+        ...visibleItems,
+        ...currentGrid.slice(visibleCount)
+      ].slice(0, 21)
+    })
+  }
+
+  function compactHistoryRows() {
+    const visibleCount = sections.historyContinuation ? 21 : 14
+    const currentGrid = [...(data.gridItems || [])]
+    const compactedItems = currentGrid
+      .slice(0, visibleCount)
+      .filter((item) => !isEmptyHistoryItem(item))
+
+    while (compactedItems.length < visibleCount) {
+      compactedItems.push(createHistoryRow())
+    }
+
+    onChange({
+      ...data,
+      gridItems: [
+        ...compactedItems,
+        ...currentGrid.slice(visibleCount)
+      ].slice(0, 21)
+    })
+    setHistoryListMessage('空行を一覧の末尾へ移動しました。')
   }
 
   function updateEducationEntry(field, value) {
@@ -240,7 +548,7 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
 
     const nextGrid = [...(data.gridItems || [])]
     while (nextGrid.length < 21) {
-      nextGrid.push({ year: '', month: '', content: '', align: 'left' })
+      nextGrid.push(createHistoryRow())
     }
 
     const workHeadingIndex = nextGrid.findIndex((item) => (
@@ -256,12 +564,14 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
 
     const generatedRows = [
       {
+        id: createHistoryRow().id,
         year: String(admissionYear),
         month: String(admissionMonth),
         content: `${schoolName} 入学`,
         align: 'left'
       },
       {
+        id: createHistoryRow().id,
         year: String(completionYear),
         month: String(completionMonth),
         content: `${schoolName} ${completionStatus}`,
@@ -302,7 +612,7 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
     }
 
     while (rebuiltGrid.length < 21) {
-      rebuiltGrid.push({ year: '', month: '', content: '', align: 'left' })
+      rebuiltGrid.push(createHistoryRow())
     }
 
     onChange({ ...data, gridItems: rebuiltGrid })
@@ -916,102 +1226,104 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
             <div className={styles.historyListHeader}>
               <div>
                 <h4>学歴・職歴の編集一覧</h4>
-                <p>各行を直接編集し、矢印で順番を変更できます。</p>
+                <p>必要な行を追加して、年月・内容・配置を直接編集できます。</p>
               </div>
+              <button
+                type="button"
+                className={styles.compactRowsButton}
+                onClick={compactHistoryRows}
+              >
+                空行を詰める
+              </button>
             </div>
 
-            <div className={styles.gridTableScroll}>
-              <table className={styles.editGridTable}>
-                <thead>
-                  <tr>
-                    <th className={styles.rowNumberColumn}>行</th>
-                    <th style={{ width: '11%' }}>年</th>
-                    <th style={{ width: '8%' }}>月</th>
-                    <th>内容 ({historyLabel})</th>
-                    <th style={{ width: '18%' }}>配置</th>
-                    <th className={styles.rowActionsColumn}>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleGridItems.map(({ item, originalIndex }, idx) => (
-                    <tr key={originalIndex}>
-                      <td className={styles.rowNumberCell}>{idx + 1}</td>
-                      <td>
-                        <input
-                          type="text"
-                          className={styles.gridInputCenter}
-                          placeholder="2022"
-                          value={item.year || ''}
-                          onChange={(e) => updateGridItem(originalIndex, 'year', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className={styles.gridInputCenter}
-                          placeholder="4"
-                          value={item.month || ''}
-                          onChange={(e) => updateGridItem(originalIndex, 'month', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className={styles.gridInputLeft}
-                          placeholder={idx === 0 ? "学歴の見出しなど" : "○○大学 入学"}
-                          value={item.content || ''}
-                          onChange={(e) => updateGridItem(originalIndex, 'content', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <select
-                          className={styles.gridSelect}
-                          value={item.align || 'left'}
-                          onChange={(e) => updateGridItem(originalIndex, 'align', e.target.value)}
-                        >
-                          <option value="left">左寄せ (内容)</option>
-                          <option value="center">中央寄せ (見出し)</option>
-                          <option value="right">右寄せ (以上など)</option>
-                        </select>
-                      </td>
-                      <td>
-                        <div className={styles.rowActions}>
-                          <button
-                            type="button"
-                            className={styles.rowActionButton}
-                            onClick={() => moveGridItem(originalIndex, -1)}
-                            disabled={idx === 0}
-                            aria-label={`${idx + 1}行目を上へ移動`}
-                            title="上へ移動"
-                          >
-                            ↑
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.rowActionButton}
-                            onClick={() => moveGridItem(originalIndex, 1)}
-                            disabled={idx === visibleGridItems.length - 1}
-                            aria-label={`${idx + 1}行目を下へ移動`}
-                            title="下へ移動"
-                          >
-                            ↓
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.rowActionButton} ${styles.rowDeleteButton}`}
-                            onClick={() => clearGridItem(originalIndex)}
-                            aria-label={`${idx + 1}行目を削除`}
-                            title="内容を削除"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={styles.historyAddToolbar}>
+              <button
+                type="button"
+                className={styles.historyAddButton}
+                onClick={() => addHistoryListItem('education')}
+              >
+                ＋ 学歴行
+              </button>
+              <button
+                type="button"
+                className={styles.historyAddButton}
+                onClick={() => addHistoryListItem('work')}
+              >
+                ＋ 職歴行
+              </button>
+              <button
+                type="button"
+                className={styles.historyAddButton}
+                onClick={() => addHistoryListItem('heading')}
+              >
+                ＋ 見出し
+              </button>
+              <button
+                type="button"
+                className={styles.historyAddButton}
+                onClick={() => addHistoryListItem('closing')}
+              >
+                ＋ 以上
+              </button>
             </div>
+
+            {historyListMessage && (
+              <p className={styles.historyListMessage} role="status">
+                {historyListMessage}
+              </p>
+            )}
+
+            <DndContext
+              sensors={historySensors}
+              collisionDetection={closestCenter}
+              onDragStart={({ active }) => setActiveHistoryId(active.id)}
+              onDragCancel={() => setActiveHistoryId(null)}
+              onDragEnd={handleHistoryDragEnd}
+            >
+              <div className={styles.gridTableScroll}>
+                <table className={styles.editGridTable}>
+                  <thead>
+                    <tr>
+                      <th className={styles.dragHandleColumn}>
+                        <span className={styles.visuallyHidden}>並び替え</span>
+                      </th>
+                      <th className={styles.rowNumberColumn}>行</th>
+                      <th className={styles.dateColumn}>年月</th>
+                      <th>内容</th>
+                      <th className={styles.alignColumn}>配置</th>
+                      <th className={styles.rowActionsColumn}>削除</th>
+                    </tr>
+                  </thead>
+                  <SortableContext
+                    items={visibleGridItems.map(({ item }) => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <tbody>
+                      {visibleGridItems.map((entry, idx) => (
+                        <SortableHistoryRow
+                          entry={entry}
+                          index={idx}
+                          headingRow={isHistoryHeading(entry.item)}
+                          placeholder={getHistoryPlaceholder(visibleGridItems, idx)}
+                          onUpdate={updateGridItem}
+                          onClear={clearGridItem}
+                          key={entry.item.id}
+                        />
+                      ))}
+                    </tbody>
+                  </SortableContext>
+                </table>
+              </div>
+              <DragOverlay>
+                {activeHistoryEntry ? (
+                  <div className={styles.historyDragOverlay}>
+                    <span className={styles.dragOverlayHandle}>≡</span>
+                    <span>{activeHistoryEntry.item.content || '空行'}</span>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           </div>
         )}
 
