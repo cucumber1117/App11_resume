@@ -509,15 +509,35 @@
 }
 
 /* History Dynamic Editing Table */
+.historyListHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historyListHeader h4 {
+  margin: 0 0 3px;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.historyListHeader p {
+  margin: 0;
+  color: var(--text);
+  font-size: 12px;
+}
+
 .gridTableScroll {
   max-height: 480px;
-  overflow-y: auto;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 
 .editGridTable {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -540,6 +560,53 @@
 
 .editGridTable tr:hover {
   background: rgba(0, 0, 0, 0.01);
+}
+
+.rowNumberColumn {
+  width: 42px;
+}
+
+.rowActionsColumn {
+  width: 112px;
+}
+
+.rowNumberCell {
+  color: var(--text);
+  font-size: 12px;
+  text-align: center;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.rowActionButton {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+
+.rowActionButton:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rowActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.rowDeleteButton:hover:not(:disabled) {
+  border-color: #cf1322;
+  color: #cf1322;
 }
 
 .gridInputCenter {

@@ -157,6 +157,35 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
     onChange({ ...data, gridItems: nextGrid })
   }
 
+  function moveGridItem(originalIndex, direction) {
+    const visibleIndex = visibleGridItems.findIndex(
+      (entry) => entry.originalIndex === originalIndex
+    )
+    const target = visibleGridItems[visibleIndex + direction]
+
+    if (!target) {
+      return
+    }
+
+    const nextGrid = [...(data.gridItems || [])]
+    ;[nextGrid[originalIndex], nextGrid[target.originalIndex]] = [
+      nextGrid[target.originalIndex],
+      nextGrid[originalIndex]
+    ]
+    onChange({ ...data, gridItems: nextGrid })
+  }
+
+  function clearGridItem(originalIndex) {
+    const nextGrid = [...(data.gridItems || [])]
+    nextGrid[originalIndex] = {
+      year: '',
+      month: '',
+      content: '',
+      align: 'left'
+    }
+    onChange({ ...data, gridItems: nextGrid })
+  }
+
   function updateEducationEntry(field, value) {
     setEducationEntry((current) => ({
       ...current,
@@ -784,11 +813,15 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
                 )}
 
                 <label className={styles.label}>
-                  学科
+                  学科{educationEntry.schoolType === 'highSchool' ? '（任意）' : ''}
                   <input
                     type="text"
                     className={styles.input}
-                    placeholder="○○学科"
+                    placeholder={
+                      educationEntry.schoolType === 'highSchool'
+                        ? '普通科'
+                        : '○○学科'
+                    }
                     value={educationEntry.departmentName}
                     onChange={(e) => updateEducationEntry('departmentName', e.target.value)}
                   />
@@ -823,7 +856,9 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
                 </fieldset>
 
                 <fieldset className={styles.educationDateField}>
-                  <legend>終了年月</legend>
+                  <legend>
+                    {educationEntry.schoolType === 'highSchool' ? '卒業年月' : '終了年月'}
+                  </legend>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -878,19 +913,29 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
               </div>
             </section>
 
+            <div className={styles.historyListHeader}>
+              <div>
+                <h4>学歴・職歴の編集一覧</h4>
+                <p>各行を直接編集し、矢印で順番を変更できます。</p>
+              </div>
+            </div>
+
             <div className={styles.gridTableScroll}>
               <table className={styles.editGridTable}>
                 <thead>
                   <tr>
-                    <th style={{ width: '12%' }}>年</th>
+                    <th className={styles.rowNumberColumn}>行</th>
+                    <th style={{ width: '11%' }}>年</th>
                     <th style={{ width: '8%' }}>月</th>
-                    <th style={{ width: '58%' }}>内容 ({historyLabel})</th>
-                    <th style={{ width: '22%' }}>配置 (寄せ)</th>
+                    <th>内容 ({historyLabel})</th>
+                    <th style={{ width: '18%' }}>配置</th>
+                    <th className={styles.rowActionsColumn}>操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibleGridItems.map(({ item, originalIndex }, idx) => (
                     <tr key={originalIndex}>
+                      <td className={styles.rowNumberCell}>{idx + 1}</td>
                       <td>
                         <input
                           type="text"
@@ -928,6 +973,39 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
                           <option value="center">中央寄せ (見出し)</option>
                           <option value="right">右寄せ (以上など)</option>
                         </select>
+                      </td>
+                      <td>
+                        <div className={styles.rowActions}>
+                          <button
+                            type="button"
+                            className={styles.rowActionButton}
+                            onClick={() => moveGridItem(originalIndex, -1)}
+                            disabled={idx === 0}
+                            aria-label={`${idx + 1}行目を上へ移動`}
+                            title="上へ移動"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.rowActionButton}
+                            onClick={() => moveGridItem(originalIndex, 1)}
+                            disabled={idx === visibleGridItems.length - 1}
+                            aria-label={`${idx + 1}行目を下へ移動`}
+                            title="下へ移動"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.rowActionButton} ${styles.rowDeleteButton}`}
+                            onClick={() => clearGridItem(originalIndex)}
+                            aria-label={`${idx + 1}行目を削除`}
+                            title="内容を削除"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
