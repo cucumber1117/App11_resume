@@ -5,10 +5,47 @@ const SELF_PR_MAX_LENGTH = 800
 const MOTIVATION_MAX_LENGTH = 800
 const PERSONAL_REQUEST_MAX_LENGTH = 400
 
+function formatPhoneNumber(value = '') {
+  const digits = String(value).replace(/\D/g, '').slice(0, 11)
+
+  if (digits.length <= 3) {
+    return digits
+  }
+
+  if (digits.length === 11 || /^(070|080|090|050)/.test(digits)) {
+    return [digits.slice(0, 3), digits.slice(3, 7), digits.slice(7)]
+      .filter(Boolean)
+      .join('-')
+  }
+
+  if (/^(03|06)/.test(digits)) {
+    return [digits.slice(0, 2), digits.slice(2, 6), digits.slice(6)]
+      .filter(Boolean)
+      .join('-')
+  }
+
+  return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)]
+    .filter(Boolean)
+    .join('-')
+}
+
 export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [isPhotoDragging, setIsPhotoDragging] = useState(false)
   const [photoError, setPhotoError] = useState('')
+  const [educationEntry, setEducationEntry] = useState({
+    schoolType: 'university',
+    universityName: '',
+    highSchoolName: '',
+    facultyName: '',
+    departmentName: '',
+    admissionYear: '',
+    admissionMonth: '',
+    completionYear: '',
+    completionMonth: '',
+    completionStatus: '卒業'
+  })
+  const [educationEntryMessage, setEducationEntryMessage] = useState('')
   const showIntroTab =
     sections.motivation || sections.selfPR || sections.personalRequest
   const historyLabel = '学歴・職歴'
@@ -36,6 +73,7 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
 
       return true
     })
+    .slice(0, sections.historyContinuation ? 21 : 14)
 
   // Helper to update flat fields
   function updateField(field, value) {
@@ -117,6 +155,141 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
       [field]: value
     }
     onChange({ ...data, gridItems: nextGrid })
+  }
+
+  function updateEducationEntry(field, value) {
+    setEducationEntry((current) => ({
+      ...current,
+      ...(field === 'schoolType'
+        ? {
+            universityName: '',
+            highSchoolName: '',
+            facultyName: '',
+            departmentName: ''
+          }
+        : {}),
+      [field]: value
+    }))
+    setEducationEntryMessage('')
+  }
+
+  function addEducationEntry() {
+    const {
+      schoolType,
+      universityName,
+      highSchoolName,
+      facultyName,
+      departmentName,
+      admissionYear,
+      admissionMonth,
+      completionYear,
+      completionMonth,
+      completionStatus
+    } = educationEntry
+    const isHighSchool = schoolType === 'highSchool'
+    const primarySchoolName = isHighSchool
+      ? highSchoolName.trim()
+      : universityName.trim()
+    const schoolName = [
+      primarySchoolName,
+      isHighSchool ? '' : facultyName.trim(),
+      departmentName.trim()
+    ].filter(Boolean).join(' ')
+
+    if (
+      !primarySchoolName ||
+      !admissionYear ||
+      !admissionMonth ||
+      !completionYear ||
+      !completionMonth
+    ) {
+      setEducationEntryMessage(
+        `${isHighSchool ? '学校名' : '大学名'}と入学・終了年月をすべて入力してください。`
+      )
+      return
+    }
+
+    const nextGrid = [...(data.gridItems || [])]
+    while (nextGrid.length < 21) {
+      nextGrid.push({ year: '', month: '', content: '', align: 'left' })
+    }
+
+    const workHeadingIndex = nextGrid.findIndex((item) => (
+      (item.content || '').replaceAll('　', '').trim() === '職歴'
+    ))
+    const educationHeadingIndex = nextGrid.findIndex((item) => (
+      (item.content || '').replaceAll('　', '').trim() === '学歴'
+    ))
+    if (educationHeadingIndex < 0 || workHeadingIndex < 0) {
+      setEducationEntryMessage('「学歴」と「職歴」の見出し行が必要です。')
+      return
+    }
+
+    const generatedRows = [
+      {
+        year: String(admissionYear),
+        month: String(admissionMonth),
+        content: `${schoolName} 入学`,
+        align: 'left'
+      },
+      {
+        year: String(completionYear),
+        month: String(completionMonth),
+        content: `${schoolName} ${completionStatus}`,
+        align: 'left'
+      }
+    ]
+
+    const isEmptyRow = (item) => (
+      !item.year && !item.month && !(item.content || '').trim()
+    )
+    const existingEducationRows = nextGrid
+      .slice(educationHeadingIndex + 1, workHeadingIndex)
+      .filter((item) => !isEmptyRow(item))
+    const rebuiltGrid = [
+      ...nextGrid.slice(0, educationHeadingIndex + 1),
+      ...existingEducationRows,
+      ...generatedRows,
+      ...nextGrid.slice(workHeadingIndex)
+    ]
+
+    while (rebuiltGrid.length > 21) {
+      const removableIndex = rebuiltGrid.findLastIndex((item) => isEmptyRow(item))
+      if (removableIndex < 0) {
+        setEducationEntryMessage(
+          '履歴欄に2行分の空きがありません。不要な行を空欄にしてから追加してください。'
+        )
+        return
+      }
+      rebuiltGrid.splice(removableIndex, 1)
+    }
+
+    const lastFilledIndex = rebuiltGrid.findLastIndex((item) => !isEmptyRow(item))
+    if (!sections.historyContinuation && lastFilledIndex >= 14) {
+      setEducationEntryMessage(
+        '1ページ目に収まりません。「項目設定」で学歴・職歴の続き欄を有効にしてください。'
+      )
+      return
+    }
+
+    while (rebuiltGrid.length < 21) {
+      rebuiltGrid.push({ year: '', month: '', content: '', align: 'left' })
+    }
+
+    onChange({ ...data, gridItems: rebuiltGrid })
+    setEducationEntry({
+      schoolType: 'university',
+      universityName: '',
+      highSchoolName: '',
+      facultyName: '',
+      departmentName: '',
+      admissionYear: '',
+      admissionMonth: '',
+      completionYear: '',
+      completionMonth: '',
+      completionStatus: '卒業'
+    })
+    setEducationEntryMessage('学歴へ2行追加しました。下の一覧から修正できます。')
   }
 
   // Helper to update license items
@@ -446,11 +619,13 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
                 <label className={styles.label}>
                   電話番号 (固定または携帯)
                   <input
-                    type="text"
+                    type="tel"
                     className={styles.input}
-                    placeholder="03-XXXX-XXXX"
+                    placeholder="03-1234-5678"
+                    inputMode="numeric"
+                    maxLength="13"
                     value={data.tel || ''}
-                    onChange={(e) => updateField('tel', e.target.value)}
+                    onChange={(e) => updateField('tel', formatPhoneNumber(e.target.value))}
                   />
                 </label>
 
@@ -506,11 +681,13 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
                 <label className={styles.label}>
                   電話番号
                   <input
-                    type="text"
+                    type="tel"
                     className={styles.input}
-                    placeholder="03-YYYY-YYYY"
+                    placeholder="03-1234-5678"
+                    inputMode="numeric"
+                    maxLength="13"
                     value={data.altTel || ''}
-                    onChange={(e) => updateField('altTel', e.target.value)}
+                    onChange={(e) => updateField('altTel', formatPhoneNumber(e.target.value))}
                   />
                 </label>
 
@@ -534,11 +711,172 @@ export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
         {sections.history && visibleTab === 'history' && (
           <div className={styles.tabSection}>
             <div className={styles.historyInfo}>
-              <h3 className={styles.sectionTitle}>{historyLabel} (全21行)</h3>
+              <h3 className={styles.sectionTitle}>
+                {historyLabel}（全{sections.historyContinuation ? 21 : 14}行）
+              </h3>
               <p className={styles.descText}>
-                JIS規格に基づき、1ページ目に14行、2ページ目に7行が自動的に分割されて配置されます。
+                1ページ目に14行表示されます。続きが必要な場合は「項目設定」から2ページ目の7行を追加できます。
               </p>
             </div>
+
+            <section className={styles.educationHelper}>
+              <div className={styles.educationHelperHeader}>
+                <div>
+                  <h4>学歴かんたん入力</h4>
+                  <p>大学または高校を選び、学校情報と年月を入力すると2行を自動で追加します。</p>
+                </div>
+              </div>
+
+              <label className={styles.educationTypeField}>
+                学校種別
+                <select
+                  className={styles.input}
+                  value={educationEntry.schoolType}
+                  onChange={(e) => updateEducationEntry('schoolType', e.target.value)}
+                >
+                  <option value="university">大学</option>
+                  <option value="highSchool">高校</option>
+                </select>
+              </label>
+
+              <div
+                className={`${styles.educationSchoolGrid} ${
+                  educationEntry.schoolType === 'highSchool'
+                    ? styles.educationSchoolGridCompact
+                    : ''
+                }`}
+              >
+                <label className={styles.label}>
+                  {educationEntry.schoolType === 'highSchool' ? '学校名' : '大学名'}
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder={
+                      educationEntry.schoolType === 'highSchool'
+                        ? '○○高等学校'
+                        : '○○大学'
+                    }
+                    value={
+                      educationEntry.schoolType === 'highSchool'
+                        ? educationEntry.highSchoolName
+                        : educationEntry.universityName
+                    }
+                    onChange={(e) => updateEducationEntry(
+                      educationEntry.schoolType === 'highSchool'
+                        ? 'highSchoolName'
+                        : 'universityName',
+                      e.target.value
+                    )}
+                  />
+                </label>
+
+                {educationEntry.schoolType === 'university' && (
+                  <label className={styles.label}>
+                    学部
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="○○学部"
+                      value={educationEntry.facultyName}
+                      onChange={(e) => updateEducationEntry('facultyName', e.target.value)}
+                    />
+                  </label>
+                )}
+
+                <label className={styles.label}>
+                  学科
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="○○学科"
+                    value={educationEntry.departmentName}
+                    onChange={(e) => updateEducationEntry('departmentName', e.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className={styles.educationDetailsGrid}>
+                <fieldset className={styles.educationDateField}>
+                  <legend>入学年月</legend>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="4"
+                    className={styles.gridInputCenter}
+                    placeholder="2022"
+                    aria-label="入学年"
+                    value={educationEntry.admissionYear}
+                    onChange={(e) => updateEducationEntry('admissionYear', e.target.value.replace(/\D/g, ''))}
+                  />
+                  <span>年</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="2"
+                    className={styles.gridInputCenter}
+                    placeholder="4"
+                    aria-label="入学月"
+                    value={educationEntry.admissionMonth}
+                    onChange={(e) => updateEducationEntry('admissionMonth', e.target.value.replace(/\D/g, ''))}
+                  />
+                  <span>月</span>
+                </fieldset>
+
+                <fieldset className={styles.educationDateField}>
+                  <legend>終了年月</legend>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="4"
+                    className={styles.gridInputCenter}
+                    placeholder="2026"
+                    aria-label="終了年"
+                    value={educationEntry.completionYear}
+                    onChange={(e) => updateEducationEntry('completionYear', e.target.value.replace(/\D/g, ''))}
+                  />
+                  <span>年</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="2"
+                    className={styles.gridInputCenter}
+                    placeholder="3"
+                    aria-label="終了月"
+                    value={educationEntry.completionMonth}
+                    onChange={(e) => updateEducationEntry('completionMonth', e.target.value.replace(/\D/g, ''))}
+                  />
+                  <span>月</span>
+                </fieldset>
+
+                <label className={styles.label}>
+                  状態
+                  <select
+                    className={styles.input}
+                    value={educationEntry.completionStatus}
+                    onChange={(e) => updateEducationEntry('completionStatus', e.target.value)}
+                  >
+                    <option value="卒業">卒業</option>
+                    <option value="中途退学">中退</option>
+                    <option value="卒業見込み">卒業見込み</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className={styles.educationHelperActions}>
+                {educationEntryMessage && (
+                  <p className={styles.educationEntryMessage} role="status">
+                    {educationEntryMessage}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className={styles.educationAddButton}
+                  onClick={addEducationEntry}
+                >
+                  学歴へ追加
+                </button>
+              </div>
+            </section>
 
             <div className={styles.gridTableScroll}>
               <table className={styles.editGridTable}>

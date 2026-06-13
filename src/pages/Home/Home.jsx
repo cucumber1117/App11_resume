@@ -48,6 +48,7 @@ const customSectionOptions = [
   { id: 'gender', label: '性別' },
   { id: 'alternateContact', label: '現住所以外の連絡先' },
   { id: 'history', label: '学歴・職歴' },
+  { id: 'historyContinuation', label: '学歴・職歴の続き（2ページ目）' },
   { id: 'licenses', label: '免許・資格' },
   { id: 'motivation', label: '志望理由' },
   { id: 'selfPR', label: '自己PR' },
@@ -77,6 +78,7 @@ export default function Home({
     gender: true,
     alternateContact: false,
     history: true,
+    historyContinuation: false,
     licenses: true,
     motivation: true,
     selfPR: true,
@@ -192,11 +194,24 @@ export default function Home({
                   <input
                     type="checkbox"
                     checked={customSections[option.id]}
+                    disabled={
+                      option.id === 'historyContinuation' &&
+                      !customSections.history
+                    }
                     onChange={(event) => {
-                      setCustomSections((current) => ({
-                        ...current,
-                        [option.id]: event.target.checked
-                      }))
+                      const checked = event.target.checked
+                      setCustomSections((current) => {
+                        const nextSections = {
+                          ...current,
+                          [option.id]: checked
+                        }
+
+                        if (option.id === 'history' && !checked) {
+                          nextSections.historyContinuation = false
+                        }
+
+                        return nextSections
+                      })
                     }}
                   />
                   <span>{option.label}</span>

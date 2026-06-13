@@ -13,6 +13,7 @@ const TEMPLATE_SECTION_PRESETS = {
     gender: false,
     alternateContact: false,
     history: true,
+    historyContinuation: false,
     licenses: false,
     motivation: true,
     selfPR: true,
@@ -23,6 +24,7 @@ const TEMPLATE_SECTION_PRESETS = {
     gender: true,
     alternateContact: true,
     history: true,
+    historyContinuation: false,
     licenses: true,
     motivation: true,
     selfPR: true,
@@ -33,6 +35,7 @@ const TEMPLATE_SECTION_PRESETS = {
     gender: false,
     alternateContact: false,
     history: true,
+    historyContinuation: false,
     licenses: false,
     motivation: false,
     selfPR: false,
@@ -43,6 +46,7 @@ const TEMPLATE_SECTION_PRESETS = {
     gender: true,
     alternateContact: true,
     history: true,
+    historyContinuation: false,
     licenses: true,
     motivation: true,
     selfPR: true,
@@ -55,6 +59,7 @@ const SECTION_OPTIONS = [
   { id: 'gender', label: '性別' },
   { id: 'alternateContact', label: '現住所以外の連絡先' },
   { id: 'history', label: '学歴・職歴' },
+  { id: 'historyContinuation', label: '学歴・職歴の続き（2ページ目）' },
   { id: 'licenses', label: '免許・資格' },
   { id: 'motivation', label: '志望理由' },
   { id: 'selfPR', label: '自己PR' },
@@ -96,6 +101,30 @@ function calculateAge(birthDate, referenceDate) {
   return age >= 0 ? String(age) : ''
 }
 
+function formatPhoneNumber(value = '') {
+  const digits = String(value).replace(/\D/g, '').slice(0, 11)
+
+  if (digits.length <= 3) {
+    return digits
+  }
+
+  if (digits.length === 11 || /^(070|080|090|050)/.test(digits)) {
+    return [digits.slice(0, 3), digits.slice(3, 7), digits.slice(7)]
+      .filter(Boolean)
+      .join('-')
+  }
+
+  if (/^(03|06)/.test(digits)) {
+    return [digits.slice(0, 2), digits.slice(2, 6), digits.slice(6)]
+      .filter(Boolean)
+      .join('-')
+  }
+
+  return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)]
+    .filter(Boolean)
+    .join('-')
+}
+
 const todayParts = getTodayParts()
 
 const defaultData = {
@@ -125,7 +154,7 @@ const defaultData = {
   altAddress: '',
   altTel: '',
   altEmail: '',
-  
+
   // 学歴・職歴 (プレビューでは最大21行)
   gridItems: [
     { year: '', month: '', content: '学　　歴', align: 'center' },
@@ -234,6 +263,8 @@ function normalizeData(savedData = {}) {
     },
     resumeDate,
     birthDate,
+    tel: formatPhoneNumber(savedData.tel),
+    altTel: formatPhoneNumber(savedData.altTel),
     gridItems: normalizeHistoryItems(savedData.gridItems)
   }
 }
@@ -664,15 +695,28 @@ function App() {
                   <input
                     type="checkbox"
                     checked={Boolean(data.templateSections?.[option.id])}
+                    disabled={
+                      option.id === 'historyContinuation' &&
+                      !data.templateSections?.history
+                    }
                     onChange={(event) => {
-                      setData((currentData) => ({
-                        ...currentData,
-                        templateType: 'custom',
-                        templateSections: {
+                      const checked = event.target.checked
+                      setData((currentData) => {
+                        const templateSections = {
                           ...currentData.templateSections,
-                          [option.id]: event.target.checked
+                          [option.id]: checked
                         }
-                      }))
+
+                        if (option.id === 'history' && !checked) {
+                          templateSections.historyContinuation = false
+                        }
+
+                        return {
+                          ...currentData,
+                          templateType: 'custom',
+                          templateSections
+                        }
+                      })
                     }}
                   />
                   <span>{option.label}</span>

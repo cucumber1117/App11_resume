@@ -91,6 +91,7 @@
   font-family: "Yu Mincho", "YuMincho", "MS Mincho", "MS PMincho", "Hiragino Mincho ProN", serif;
   color: #000000;
   line-height: 1.3;
+  text-align: left;
   width: 210mm;
   height: 297mm;
   padding: 15mm 15mm;
@@ -212,27 +213,39 @@
   width: 60px;
   font-size: 9px;
   color: #000000;
-  text-align: justify;
-  text-align-last: justify;
+  text-align: center;
+  white-space: nowrap;
   border-right: none !important;
 }
 
 .valCell {
   font-size: 11px;
+  text-align: left;
   border-left: none !important;
   border-right: none !important;
+  overflow: hidden;
 }
 
 .valNameCell {
   font-size: 18px;
   font-weight: bold;
   letter-spacing: 0.1em;
+  text-align: center;
   border-left: none !important;
   border-right: none !important;
+  overflow: hidden;
+}
+
+.nameValue {
+  display: inline-block;
+  max-width: 95%;
+  transform: translateX(-5%);
+  transform-origin: center;
 }
 
 .valBirthCell {
   font-size: 11px;
+  text-align: center;
   border-left: none !important;
 }
 
@@ -276,15 +289,32 @@
 
 .valFuriCell {
   font-size: 10px;
+  text-align: left;
   border-left: none !important;
   border-right: none !important;
+  overflow: hidden;
 }
 
 .valAddrCell {
   font-size: 11px;
-  line-height: 1.4;
+  text-align: left;
   border-left: none !important;
   border-right: none !important;
+  overflow: hidden;
+}
+
+.addressPostal {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 9.5px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.addressValue {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .altNote {
@@ -294,15 +324,20 @@
 }
 
 .contactLabelCell {
-  width: 45px;
-  font-size: 9px;
+  width: 50px;
+  font-size: 8.5px;
   text-align: center;
+  white-space: nowrap;
+  word-break: keep-all;
   border-left: 1px solid #000000 !important;
 }
 
 .contactValCell {
   width: 155px;
   font-size: 11px;
+  text-align: left;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 /* History table */
@@ -448,12 +483,11 @@
 
 .boxBodyText {
   padding: 8px 10px 10px 10px;
-  font-size: 11px;
-  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-all;
   overflow: hidden;
   flex-grow: 1;
+  transition: font-size 0.15s ease, line-height 0.15s ease, letter-spacing 0.15s ease;
 }
 
 

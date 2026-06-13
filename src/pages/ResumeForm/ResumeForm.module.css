@@ -362,6 +362,152 @@
   margin-bottom: 8px;
 }
 
+.educationHelper {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+  text-align: left;
+}
+
+.educationHelperHeader h4 {
+  margin: 0 0 3px;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.educationHelperHeader p {
+  margin: 0;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.educationSchoolGrid,
+.educationDetailsGrid {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+  margin-top: 12px;
+  min-width: 0;
+}
+
+.educationSchoolGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.educationSchoolGridCompact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.educationTypeField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(220px, 100%);
+  margin-top: 12px;
+  color: var(--text-h);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.educationDetailsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(130px, 0.7fr);
+}
+
+.educationDateField {
+  display: grid;
+  grid-template-columns: minmax(52px, 1fr) auto minmax(40px, 0.7fr) auto;
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.educationDateField legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: var(--text-h);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.educationDateField span {
+  color: var(--text-h);
+  font-size: 12px;
+}
+
+.educationHelperActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.educationEntryMessage {
+  flex: 1;
+  margin: 0;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.educationAddButton {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.educationAddButton:hover {
+  filter: brightness(0.95);
+}
+
+@container (max-width: 720px) {
+  .educationSchoolGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .educationSchoolGrid:not(.educationSchoolGridCompact) > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .educationDetailsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .educationDetailsGrid > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (max-width: 480px) {
+  .educationSchoolGrid,
+  .educationDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .educationSchoolGrid:not(.educationSchoolGridCompact) > :first-child,
+  .educationDetailsGrid > :last-child {
+    grid-column: auto;
+  }
+
+  .educationHelperActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .educationAddButton {
+    width: 100%;
+  }
+}
+
 /* History Dynamic Editing Table */
 .gridTableScroll {
   max-height: 480px;

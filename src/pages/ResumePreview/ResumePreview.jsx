@@ -2,6 +2,99 @@
 import { useState } from 'react'
 import styles from './ResumePreview.module.css'
 
+function getTextDensity(text = '') {
+  const value = String(text)
+  const lines = value.split('\n')
+  const longestLine = Math.max(0, ...lines.map((line) => line.length))
+
+  return value.length + Math.max(0, lines.length - 1) * 18 +
+    Math.max(0, longestLine - 60) * 0.3
+}
+
+function getAdaptiveTextStyle(text) {
+  const density = getTextDensity(text)
+
+  if (density <= 140) {
+    return { fontSize: '11px', lineHeight: 1.6, letterSpacing: '0.04em' }
+  }
+  if (density <= 280) {
+    return { fontSize: '10px', lineHeight: 1.5, letterSpacing: '0.02em' }
+  }
+  if (density <= 450) {
+    return { fontSize: '9px', lineHeight: 1.38, letterSpacing: '0' }
+  }
+  if (density <= 650) {
+    return { fontSize: '8px', lineHeight: 1.28, letterSpacing: '-0.01em' }
+  }
+
+  return { fontSize: '7.2px', lineHeight: 1.2, letterSpacing: '-0.02em' }
+}
+
+function getAdaptiveBoxStyle(text) {
+  const density = getTextDensity(text)
+  return {
+    flexGrow: Math.min(3.2, Math.max(1, density / 180))
+  }
+}
+
+function getAdaptiveBasicInfoStyle(text, type = 'standard') {
+  const length = String(text || '').length
+
+  if (type === 'address') {
+    const addressLevels = [
+      { max: 18, fontSize: '15px', lineHeight: 1.35, letterSpacing: '0.04em' },
+      { max: 28, fontSize: '13.5px', lineHeight: 1.3, letterSpacing: '0.02em' },
+      { max: 40, fontSize: '12px', lineHeight: 1.25, letterSpacing: '0' },
+      { max: 55, fontSize: '10.5px', lineHeight: 1.2, letterSpacing: '-0.01em' },
+      { max: Infinity, fontSize: '9px', lineHeight: 1.15, letterSpacing: '-0.02em' }
+    ]
+    const level = addressLevels.find((item) => length <= item.max)
+
+    return {
+      fontSize: level.fontSize,
+      lineHeight: level.lineHeight,
+      letterSpacing: level.letterSpacing
+    }
+  }
+
+  const settings = {
+    name: {
+      steps: [12, 20, 30],
+      sizes: ['18px', '16px', '14px', '12px'],
+      spacing: ['0.1em', '0.06em', '0.02em', '0']
+    },
+    furigana: {
+      steps: [20, 32, 44],
+      sizes: ['11px', '10px', '9px', '8px'],
+      spacing: ['0.04em', '0.02em', '0', '-0.01em']
+    },
+    contact: {
+      steps: [16, 24, 34],
+      sizes: ['11px', '10px', '9px', '8px'],
+      spacing: ['0', '-0.01em', '-0.02em', '-0.03em']
+    },
+    standard: {
+      steps: [18, 28, 40],
+      sizes: ['11px', '10px', '9px', '8px'],
+      spacing: ['0.02em', '0', '-0.01em', '-0.02em']
+    }
+  }
+  const config = settings[type] || settings.standard
+  const level = length <= config.steps[0]
+    ? 0
+    : length <= config.steps[1]
+      ? 1
+      : length <= config.steps[2]
+        ? 2
+        : 3
+
+  return {
+    fontSize: config.sizes[level],
+    letterSpacing: config.spacing[level],
+    lineHeight: 1.25
+  }
+}
+
 export default function ResumePreview({ data, sections = {} }) {
   const [currentPage, setCurrentPage] = useState(0)
   const d = data || {}
@@ -39,7 +132,7 @@ export default function ResumePreview({ data, sections = {} }) {
   }
   const slicedLicenseItems = displayLicenseItems.slice(0, 5)
   const hasPageTwo = Boolean(
-    sections.history ||
+    (sections.history && sections.historyContinuation) ||
     sections.licenses ||
     sections.motivation ||
     sections.selfPR ||
@@ -120,7 +213,9 @@ export default function ResumePreview({ data, sections = {} }) {
                   style={{ borderBottom: '1px dashed #000' }}
                   colSpan={sections.gender ? 1 : 3}
                 >
-                  {d.nameFurigana}
+                  <span style={getAdaptiveBasicInfoStyle(d.nameFurigana, 'furigana')}>
+                    {d.nameFurigana}
+                  </span>
                 </td>
                 {sections.gender && (
                   <>
@@ -132,7 +227,12 @@ export default function ResumePreview({ data, sections = {} }) {
               <tr className={styles.rowName}>
                 <td className={styles.labelCell}>氏　　名</td>
                 <td className={styles.valNameCell} colSpan={sections.gender ? 1 : 3}>
-                  {d.name}
+                  <span
+                    className={styles.nameValue}
+                    style={getAdaptiveBasicInfoStyle(d.name, 'name')}
+                  >
+                    {d.name}
+                  </span>
                 </td>
               </tr>
               <tr className={styles.rowBirth}>
@@ -150,38 +250,70 @@ export default function ResumePreview({ data, sections = {} }) {
               {/* Current Address Furigana */}
               <tr className={styles.rowAddrFuri}>
                 <td className={styles.labelCell} style={{ borderBottom: '1px dashed #000' }}>ふりがな</td>
-                <td className={styles.valFuriCell} style={{ borderBottom: '1px dashed #000' }}>{d.addressFurigana}</td>
+                <td className={styles.valFuriCell} style={{ borderBottom: '1px dashed #000' }}>
+                  <span style={getAdaptiveBasicInfoStyle(d.addressFurigana, 'furigana')}>
+                    {d.addressFurigana}
+                  </span>
+                </td>
                 <td className={styles.contactLabelCell} style={{ borderBottom: '1px dashed #000' }}>電話</td>
-                <td className={styles.contactValCell} style={{ borderBottom: '1px dashed #000' }}>{d.tel}</td>
+                <td className={styles.contactValCell} style={{ borderBottom: '1px dashed #000' }}>
+                  <span style={getAdaptiveBasicInfoStyle(d.tel, 'contact')}>{d.tel}</span>
+                </td>
               </tr>
               {/* Current Address Main */}
               <tr className={styles.rowAddrMain}>
                 <td className={styles.labelCell}>現住所</td>
                 <td className={styles.valAddrCell}>
-                  〒（{d.addressZip ? `${d.addressZip.slice(0,3)}　－　${d.addressZip.slice(3)}` : '　　　　－　　　　'}）<br />
-                  {d.address}
+                  <span className={styles.addressPostal}>
+                    〒（{d.addressZip ? `${d.addressZip.slice(0,3)}　－　${d.addressZip.slice(3)}` : '　　　　－　　　　'}）
+                  </span>
+                  <span
+                    className={styles.addressValue}
+                    style={getAdaptiveBasicInfoStyle(d.address, 'address')}
+                  >
+                    {d.address}
+                  </span>
                 </td>
                 <td className={styles.contactLabelCell}>E-mail</td>
-                <td className={styles.contactValCell}>{d.email}</td>
+                <td className={styles.contactValCell}>
+                  <span style={getAdaptiveBasicInfoStyle(d.email, 'contact')}>{d.email}</span>
+                </td>
               </tr>
 
               {sections.alternateContact && (
                 <>
                   <tr className={styles.rowAddrFuri}>
                     <td className={styles.labelCell} style={{ borderBottom: '1px dashed #000' }}>ふりがな</td>
-                    <td className={styles.valFuriCell} style={{ borderBottom: '1px dashed #000' }}>{d.altAddressFurigana}</td>
+                    <td className={styles.valFuriCell} style={{ borderBottom: '1px dashed #000' }}>
+                      <span style={getAdaptiveBasicInfoStyle(d.altAddressFurigana, 'furigana')}>
+                        {d.altAddressFurigana}
+                      </span>
+                    </td>
                     <td className={styles.contactLabelCell} style={{ borderBottom: '1px dashed #000' }}>電話</td>
-                    <td className={styles.contactValCell} style={{ borderBottom: '1px dashed #000' }}>{d.altTel}</td>
+                    <td className={styles.contactValCell} style={{ borderBottom: '1px dashed #000' }}>
+                      <span style={getAdaptiveBasicInfoStyle(d.altTel, 'contact')}>{d.altTel}</span>
+                    </td>
                   </tr>
                   <tr className={styles.rowAddrMain}>
                     <td className={styles.labelCell}>連絡先</td>
                     <td className={styles.valAddrCell}>
-                      〒（{d.altAddressZip ? `${d.altAddressZip.slice(0,3)}　－　${d.altAddressZip.slice(3)}` : '　　　　－　　　　'}）
-                      <span className={styles.altNote}>（現住所以外に連絡を希望する場合のみ記入）</span><br />
-                      {d.altAddress}
+                      <span className={styles.addressPostal}>
+                        〒（{d.altAddressZip ? `${d.altAddressZip.slice(0,3)}　－　${d.altAddressZip.slice(3)}` : '　　　　－　　　　'}）
+                        <span className={styles.altNote}>（現住所以外に連絡を希望する場合のみ記入）</span>
+                      </span>
+                      <span
+                        className={styles.addressValue}
+                        style={getAdaptiveBasicInfoStyle(d.altAddress, 'address')}
+                      >
+                        {d.altAddress}
+                      </span>
                     </td>
                     <td className={styles.contactLabelCell}>E-mail</td>
-                    <td className={styles.contactValCell}>{d.altEmail}</td>
+                    <td className={styles.contactValCell}>
+                      <span style={getAdaptiveBasicInfoStyle(d.altEmail, 'contact')}>
+                        {d.altEmail}
+                      </span>
+                    </td>
                   </tr>
                 </>
               )}
@@ -224,7 +356,7 @@ export default function ResumePreview({ data, sections = {} }) {
         {hasPageTwo && (
           <div className={`${styles.a4Sheet} ${visiblePage === 1 ? styles.pageActive : styles.pageHidden}`} data-sheet="a4">
           {/* Education & Work Experience Table (Page 2: 7 rows) */}
-          {sections.history && (
+          {sections.history && sections.historyContinuation && (
             <table className={styles.historyTable} style={{ marginTop: 0 }}>
             <thead>
               <tr>
@@ -274,27 +406,51 @@ export default function ResumePreview({ data, sections = {} }) {
             <div className={styles.largeTextBoxes}>
             {/* Motivation Box */}
             {sections.motivation && (
-              <div className={styles.motivationContainer}>
+              <div
+                className={styles.motivationContainer}
+                style={getAdaptiveBoxStyle(d.motivation)}
+              >
               <div className={styles.boxLabel}>志望理由</div>
-              <div className={styles.boxBodyText}>{d.motivation}</div>
+              <div
+                className={styles.boxBodyText}
+                style={getAdaptiveTextStyle(d.motivation)}
+              >
+                {d.motivation}
+              </div>
               </div>
             )}
 
             {/* Self PR Box */}
             {sections.selfPR && (
-              <div className={styles.selfPRContainer}>
+              <div
+                className={styles.selfPRContainer}
+                style={getAdaptiveBoxStyle(d.selfPR)}
+              >
               <div className={styles.boxLabel}>自己 PR</div>
-              <div className={styles.boxBodyText}>{d.selfPR}</div>
+              <div
+                className={styles.boxBodyText}
+                style={getAdaptiveTextStyle(d.selfPR)}
+              >
+                {d.selfPR}
+              </div>
               </div>
             )}
 
             {/* Personal Request Box */}
             {sections.personalRequest && (
-              <div className={styles.requestContainer}>
+              <div
+                className={styles.requestContainer}
+                style={getAdaptiveBoxStyle(d.personalRequest)}
+              >
               <div className={styles.boxLabelWithDoubleBorder}>
                 本人希望記入欄（特に給与、職種、勤務時間、勤務地、その他についての希望などがあれば記入）
               </div>
-              <div className={styles.boxBodyText}>{d.personalRequest}</div>
+              <div
+                className={styles.boxBodyText}
+                style={getAdaptiveTextStyle(d.personalRequest)}
+              >
+                {d.personalRequest}
+              </div>
               </div>
             )}
             </div>
