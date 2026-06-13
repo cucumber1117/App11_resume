@@ -2,10 +2,25 @@
 import { useState } from 'react'
 import styles from './ResumePreview.module.css'
 
-export default function ResumePreview({ data }) {
+export default function ResumePreview({ data, sections = {} }) {
   const [currentPage, setCurrentPage] = useState(0)
   const d = data || {}
-  const gridItems = d.gridItems || []
+  const seenHistoryHeadings = new Set()
+  const gridItems = (d.gridItems || []).filter((item) => {
+    const content = (item.content || '').replaceAll('　', '').trim()
+    if (content === '賞罰' || content === 'なし') {
+      return false
+    }
+
+    if (content === '学歴' || content === '職歴') {
+      if (seenHistoryHeadings.has(content)) {
+        return false
+      }
+      seenHistoryHeadings.add(content)
+    }
+
+    return true
+  })
   
   // Fill remaining items to keep the grid size fixed to 21 rows
   const displayGridItems = [...gridItems]
@@ -23,6 +38,16 @@ export default function ResumePreview({ data }) {
     displayLicenseItems.push({ year: '', month: '', content: '' })
   }
   const slicedLicenseItems = displayLicenseItems.slice(0, 5)
+  const hasPageTwo = Boolean(
+    sections.history ||
+    sections.licenses ||
+    sections.motivation ||
+    sections.selfPR ||
+    sections.personalRequest
+  )
+  const pageCount = hasPageTwo ? 2 : 1
+  const visiblePage = hasPageTwo ? currentPage : 0
+  const historyTitle = '学　　歴　　・　　職　　歴'
 
   return (
     <div id="resume-preview" className={styles.previewContainer}>
@@ -30,29 +55,33 @@ export default function ResumePreview({ data }) {
       <div className={styles.pageNav}>
         <button
           type="button"
-          className={`${styles.pageNavBtn} ${currentPage === 0 ? styles.pageNavBtnActive : ''}`}
+          className={`${styles.pageNavBtn} ${visiblePage === 0 ? styles.pageNavBtnActive : ''}`}
           onClick={() => setCurrentPage(0)}
-          aria-pressed={currentPage === 0}
+          aria-pressed={visiblePage === 0}
         >
           1ページ目
         </button>
-        <button
-          type="button"
-          className={`${styles.pageNavBtn} ${currentPage === 1 ? styles.pageNavBtnActive : ''}`}
-          onClick={() => setCurrentPage(1)}
-          aria-pressed={currentPage === 1}
-        >
-          2ページ目
-        </button>
-        <span className={styles.pageIndicator}>{currentPage + 1} / 2</span>
+        {hasPageTwo && (
+          <button
+            type="button"
+            className={`${styles.pageNavBtn} ${visiblePage === 1 ? styles.pageNavBtnActive : ''}`}
+            onClick={() => setCurrentPage(1)}
+            aria-pressed={visiblePage === 1}
+          >
+            2ページ目
+          </button>
+        )}
+        <span className={styles.pageIndicator}>
+          {visiblePage + 1} / {pageCount}
+        </span>
       </div>
 
       <div className={styles.sheetsWrapper}>
         {/* ================= PAGE 1: 履歴書 1ページ目 ================= */}
-        <div className={`${styles.a4Sheet} ${currentPage === 0 ? styles.pageActive : styles.pageHidden}`} data-sheet="a4">
+        <div className={`${styles.a4Sheet} ${visiblePage === 0 ? styles.pageActive : styles.pageHidden}`} data-sheet="a4">
           
           {/* Top Header Row with Date and Photo */}
-          <div className={styles.topHeaderArea}>
+          <div className={`${styles.topHeaderArea} ${!sections.photo ? styles.topHeaderWithoutPhoto : ''}`}>
             <div className={styles.headerLeft}>
               <div className={styles.dateHeader}>
                 {d.resumeDate?.year || '　　'} 年 {d.resumeDate?.month || '　'} 月 {d.resumeDate?.day || '　'} 日現在
@@ -60,7 +89,8 @@ export default function ResumePreview({ data }) {
               <div className={styles.documentTitle}>履　歴　書</div>
             </div>
             
-            <div className={styles.photoContainer}>
+            {sections.photo && (
+              <div className={styles.photoContainer}>
               {d.photo ? (
                 <img src={d.photo} alt="証明写真" className={styles.uploadedPhoto} />
               ) : (
@@ -76,7 +106,8 @@ export default function ResumePreview({ data }) {
                   </span>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Personal Details Table */}
@@ -84,13 +115,25 @@ export default function ResumePreview({ data }) {
             <tbody>
               <tr className={styles.rowFurigana}>
                 <td className={styles.labelCell} style={{ borderBottom: '1px dashed #000' }}>ふりがな</td>
-                <td className={styles.valCell} style={{ borderBottom: '1px dashed #000' }}>{d.nameFurigana}</td>
-                <td className={styles.genderLabelCell} rowSpan="2">※性別</td>
-                <td className={styles.genderValCell} rowSpan="2">{d.gender}</td>
+                <td
+                  className={styles.valCell}
+                  style={{ borderBottom: '1px dashed #000' }}
+                  colSpan={sections.gender ? 1 : 3}
+                >
+                  {d.nameFurigana}
+                </td>
+                {sections.gender && (
+                  <>
+                    <td className={styles.genderLabelCell} rowSpan="2">※性別</td>
+                    <td className={styles.genderValCell} rowSpan="2">{d.gender}</td>
+                  </>
+                )}
               </tr>
               <tr className={styles.rowName}>
                 <td className={styles.labelCell}>氏　　名</td>
-                <td className={styles.valNameCell}>{d.name}</td>
+                <td className={styles.valNameCell} colSpan={sections.gender ? 1 : 3}>
+                  {d.name}
+                </td>
               </tr>
               <tr className={styles.rowBirth}>
                 <td className={styles.labelCell}>生年月日</td>
@@ -122,34 +165,37 @@ export default function ResumePreview({ data }) {
                 <td className={styles.contactValCell}>{d.email}</td>
               </tr>
 
-              {/* Alt Address Furigana */}
-              <tr className={styles.rowAddrFuri}>
-                <td className={styles.labelCell} style={{ borderBottom: '1px dashed #000' }}>ふりがな</td>
-                <td className={styles.valFuriCell} style={{ borderBottom: '1px dashed #000' }}>{d.altAddressFurigana}</td>
-                <td className={styles.contactLabelCell} style={{ borderBottom: '1px dashed #000' }}>電話</td>
-                <td className={styles.contactValCell} style={{ borderBottom: '1px dashed #000' }}>{d.altTel}</td>
-              </tr>
-              {/* Alt Address Main */}
-              <tr className={styles.rowAddrMain}>
-                <td className={styles.labelCell}>連絡先</td>
-                <td className={styles.valAddrCell}>
-                  〒（{d.altAddressZip ? `${d.altAddressZip.slice(0,3)}　－　${d.altAddressZip.slice(3)}` : '　　　　－　　　　'}）
-                  <span className={styles.altNote}>（現住所以外に連絡を希望する場合のみ記入）</span><br />
-                  {d.altAddress}
-                </td>
-                <td className={styles.contactLabelCell}>E-mail</td>
-                <td className={styles.contactValCell}>{d.altEmail}</td>
-              </tr>
+              {sections.alternateContact && (
+                <>
+                  <tr className={styles.rowAddrFuri}>
+                    <td className={styles.labelCell} style={{ borderBottom: '1px dashed #000' }}>ふりがな</td>
+                    <td className={styles.valFuriCell} style={{ borderBottom: '1px dashed #000' }}>{d.altAddressFurigana}</td>
+                    <td className={styles.contactLabelCell} style={{ borderBottom: '1px dashed #000' }}>電話</td>
+                    <td className={styles.contactValCell} style={{ borderBottom: '1px dashed #000' }}>{d.altTel}</td>
+                  </tr>
+                  <tr className={styles.rowAddrMain}>
+                    <td className={styles.labelCell}>連絡先</td>
+                    <td className={styles.valAddrCell}>
+                      〒（{d.altAddressZip ? `${d.altAddressZip.slice(0,3)}　－　${d.altAddressZip.slice(3)}` : '　　　　－　　　　'}）
+                      <span className={styles.altNote}>（現住所以外に連絡を希望する場合のみ記入）</span><br />
+                      {d.altAddress}
+                    </td>
+                    <td className={styles.contactLabelCell}>E-mail</td>
+                    <td className={styles.contactValCell}>{d.altEmail}</td>
+                  </tr>
+                </>
+              )}
             </tbody>
           </table>
 
           {/* Education & Work Experience Table (Page 1: 14 rows) */}
-          <table className={styles.historyTable}>
+          {sections.history && (
+            <table className={styles.historyTable}>
             <thead>
               <tr>
                 <th className={styles.colYear}>年</th>
                 <th className={styles.colMonth}>月</th>
-                <th className={styles.colContent}>学　　歴　　・　　職　　歴</th>
+                <th className={styles.colContent}>{historyTitle}</th>
               </tr>
             </thead>
             <tbody>
@@ -163,23 +209,28 @@ export default function ResumePreview({ data }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          )}
 
           {/* Gender note at the bottom of Page 1 */}
-          <div className={styles.genderNote}>
-            ※「性別」欄：記載は任意です。未記載とすることも可能です。
-          </div>
+          {sections.gender && (
+            <div className={styles.genderNote}>
+              ※「性別」欄：記載は任意です。未記載とすることも可能です。
+            </div>
+          )}
         </div>
 
         {/* ================= PAGE 2: 履歴書 2ページ目 ================= */}
-        <div className={`${styles.a4Sheet} ${currentPage === 1 ? styles.pageActive : styles.pageHidden}`} data-sheet="a4">
+        {hasPageTwo && (
+          <div className={`${styles.a4Sheet} ${visiblePage === 1 ? styles.pageActive : styles.pageHidden}`} data-sheet="a4">
           {/* Education & Work Experience Table (Page 2: 7 rows) */}
-          <table className={styles.historyTable} style={{ marginTop: 0 }}>
+          {sections.history && (
+            <table className={styles.historyTable} style={{ marginTop: 0 }}>
             <thead>
               <tr>
                 <th className={styles.colYear}>年</th>
                 <th className={styles.colMonth}>月</th>
-                <th className={styles.colContent}>学　　歴　　・　　職　　歴</th>
+                <th className={styles.colContent}>続　　き</th>
               </tr>
             </thead>
             <tbody>
@@ -193,10 +244,12 @@ export default function ResumePreview({ data }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          )}
 
           {/* Licenses & Qualifications Table (5 rows) */}
-          <table className={styles.licenseTable}>
+          {sections.licenses && (
+            <table className={styles.licenseTable}>
             <thead>
               <tr>
                 <th className={styles.colYear}>年</th>
@@ -213,25 +266,41 @@ export default function ResumePreview({ data }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          )}
 
-          {/* Self PR & Personal Request area */}
-          <div className={styles.largeTextBoxes}>
+          {/* Motivation, Self PR & Personal Request area */}
+          {(sections.motivation || sections.selfPR || sections.personalRequest) && (
+            <div className={styles.largeTextBoxes}>
+            {/* Motivation Box */}
+            {sections.motivation && (
+              <div className={styles.motivationContainer}>
+              <div className={styles.boxLabel}>志望理由</div>
+              <div className={styles.boxBodyText}>{d.motivation}</div>
+              </div>
+            )}
+
             {/* Self PR Box */}
-            <div className={styles.selfPRContainer}>
+            {sections.selfPR && (
+              <div className={styles.selfPRContainer}>
               <div className={styles.boxLabel}>自己 PR</div>
               <div className={styles.boxBodyText}>{d.selfPR}</div>
-            </div>
+              </div>
+            )}
 
             {/* Personal Request Box */}
-            <div className={styles.requestContainer}>
+            {sections.personalRequest && (
+              <div className={styles.requestContainer}>
               <div className={styles.boxLabelWithDoubleBorder}>
                 本人希望記入欄（特に給与、職種、勤務時間、勤務地、その他についての希望などがあれば記入）
               </div>
               <div className={styles.boxBodyText}>{d.personalRequest}</div>
+              </div>
+            )}
             </div>
+          )}
           </div>
-        </div>
+        )}
       </div>
 
     </div>

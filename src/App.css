@@ -344,6 +344,168 @@
   line-height: 1.4;
 }
 
+.pdf-check-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 8, 14, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.pdf-check-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100svh - 40px);
+  padding: 26px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-sizing: border-box;
+  color: var(--text-h);
+  background: var(--bg);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  text-align: left;
+}
+
+.pdf-check-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.pdf-check-header h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+}
+
+.pdf-check-eyebrow {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pdf-check-close {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--code-bg);
+  font-size: 23px;
+  cursor: pointer;
+}
+
+.pdf-check-description {
+  margin-top: 14px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.pdf-check-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 20px 0;
+  list-style: none;
+}
+
+.pdf-check-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.pdf-check-list small {
+  color: var(--text);
+  font-size: 10px;
+}
+
+.pdf-check-status {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pdf-check-list .is-complete .pdf-check-status {
+  color: #237804;
+  background: #f6ffed;
+}
+
+.pdf-check-list .is-incomplete .pdf-check-status {
+  color: #cf1322;
+  background: #fff1f0;
+}
+
+.pdf-check-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #a8071a;
+  background: #fff1f0;
+  font-size: 12px;
+}
+
+.pdf-check-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.pdf-check-actions button:disabled,
+.pdf-check-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.section-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.section-setting-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text-h);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.section-setting-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.section-setting-option input {
+  accent-color: var(--accent);
+}
+
+@media (max-width: 560px) {
+  .section-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Hide other assets for this file view */
 .hero, #center, #next-steps, #spacer {
   display: none !important;

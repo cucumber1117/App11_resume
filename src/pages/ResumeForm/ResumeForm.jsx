@@ -1,10 +1,41 @@
 import { useState } from 'react'
 import styles from './ResumeForm.module.css'
 
-export default function ResumeForm({ data, onChange, onSave }) {
+const SELF_PR_MAX_LENGTH = 800
+const MOTIVATION_MAX_LENGTH = 800
+const PERSONAL_REQUEST_MAX_LENGTH = 400
+
+export default function ResumeForm({ data, onChange, onSave, sections = {} }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [isPhotoDragging, setIsPhotoDragging] = useState(false)
   const [photoError, setPhotoError] = useState('')
+  const showIntroTab =
+    sections.motivation || sections.selfPR || sections.personalRequest
+  const historyLabel = '学歴・職歴'
+  const activeTabIsAvailable =
+    activeTab === 'basic' ||
+    (activeTab === 'history' && sections.history) ||
+    (activeTab === 'license' && sections.licenses) ||
+    (activeTab === 'intro' && showIntroTab)
+  const visibleTab = activeTabIsAvailable ? activeTab : 'basic'
+  const seenHistoryHeadings = new Set()
+  const visibleGridItems = (data.gridItems || [])
+    .map((item, originalIndex) => ({ item, originalIndex }))
+    .filter(({ item }) => {
+      const content = (item.content || '').replaceAll('　', '').trim()
+      if (content === '賞罰' || content === 'なし') {
+        return false
+      }
+
+      if (content === '学歴' || content === '職歴') {
+        if (seenHistoryHeadings.has(content)) {
+          return false
+        }
+        seenHistoryHeadings.add(content)
+      }
+
+      return true
+    })
 
   // Helper to update flat fields
   function updateField(field, value) {
@@ -145,39 +176,45 @@ export default function ResumeForm({ data, onChange, onSave }) {
       <nav className={styles.tabsNav}>
         <button
           type="button"
-          className={`${styles.tabBtn} ${activeTab === 'basic' ? styles.activeTab : ''}`}
+          className={`${styles.tabBtn} ${visibleTab === 'basic' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('basic')}
         >
           基本情報・住所
         </button>
-        <button
-          type="button"
-          className={`${styles.tabBtn} ${activeTab === 'history' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          学歴・職歴・賞罰
-        </button>
-        <button
-          type="button"
-          className={`${styles.tabBtn} ${activeTab === 'license' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('license')}
-        >
-          免許・資格
-        </button>
-        <button
-          type="button"
-          className={`${styles.tabBtn} ${activeTab === 'intro' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('intro')}
-        >
-          自己PR・希望欄
-        </button>
+        {sections.history && (
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${visibleTab === 'history' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            {historyLabel}
+          </button>
+        )}
+        {sections.licenses && (
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${visibleTab === 'license' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('license')}
+          >
+            免許・資格
+          </button>
+        )}
+        {showIntroTab && (
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${visibleTab === 'intro' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('intro')}
+          >
+            志望理由・PR
+          </button>
+        )}
       </nav>
 
       {/* Form Content area */}
       <form onSubmit={(e) => { e.preventDefault(); onSave(data) }} className={styles.formBody}>
         
         {/* ================= TAB 1: 基本情報 ================= */}
-        {activeTab === 'basic' && (
+        {visibleTab === 'basic' && (
           <div className={styles.tabSection}>
             <h3 className={styles.sectionTitle}>基本情報</h3>
             
@@ -237,7 +274,8 @@ export default function ResumeForm({ data, onChange, onSave }) {
               </div>
 
               <div className={styles.formCol}>
-                <div className={styles.label}>
+                {sections.photo && (
+                  <div className={styles.label}>
                   証明写真
                   <div
                     className={`${styles.photoDropZone} ${isPhotoDragging ? styles.photoDropZoneActive : ''}`}
@@ -292,23 +330,37 @@ export default function ResumeForm({ data, onChange, onSave }) {
                       </button>
                     )}
                   </div>
-                </div>
+                  </div>
+                )}
 
-                <div className={styles.genderDobRow}>
-                  <label className={styles.label}>
-                    性別
-                    <select
-                      className={styles.input}
-                      value={data.gender || ''}
-                      onChange={(e) => updateField('gender', e.target.value)}
-                    >
-                      <option value="">未選択 (任意)</option>
-                      <option value="男">男</option>
-                      <option value="女">女</option>
-                      <option value="その他">その他</option>
-                    </select>
-                  </label>
+                {sections.gender ? (
+                  <div className={styles.genderDobRow}>
+                    <label className={styles.label}>
+                      性別
+                      <select
+                        className={styles.input}
+                        value={data.gender || ''}
+                        onChange={(e) => updateField('gender', e.target.value)}
+                      >
+                        <option value="">未選択 (任意)</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="その他">その他</option>
+                      </select>
+                    </label>
 
+                    <label className={styles.label}>
+                      満年齢
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="22"
+                        value={data.birthDate?.age || ''}
+                        onChange={(e) => updateNestedField('birthDate', 'age', e.target.value)}
+                      />
+                    </label>
+                  </div>
+                ) : (
                   <label className={styles.label}>
                     満年齢
                     <input
@@ -319,7 +371,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                       onChange={(e) => updateNestedField('birthDate', 'age', e.target.value)}
                     />
                   </label>
-                </div>
+                )}
               </div>
             </div>
 
@@ -354,7 +406,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
             </label>
 
             <h3 className={styles.sectionTitle}>現住所・連絡先</h3>
-            <div className={styles.formGrid}>
+            <div className={`${styles.formGrid} ${!sections.alternateContact ? styles.formGridSingle : ''}`}>
               <div className={styles.formCol}>
                 <h4 className={styles.subSectionTitle}>現住所</h4>
                 <label className={styles.label}>
@@ -414,7 +466,8 @@ export default function ResumeForm({ data, onChange, onSave }) {
                 </label>
               </div>
 
-              <div className={styles.formCol}>
+              {sections.alternateContact && (
+                <div className={styles.formCol}>
                 <h4 className={styles.subSectionTitle}>連絡先 (現住所と異なる場合のみ)</h4>
                 <label className={styles.label}>
                   連絡先 ふりがな
@@ -471,16 +524,17 @@ export default function ResumeForm({ data, onChange, onSave }) {
                     onChange={(e) => updateField('altEmail', e.target.value)}
                   />
                 </label>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* ================= TAB 2: 学歴・職歴・賞罰 ================= */}
-        {activeTab === 'history' && (
+        {/* ================= TAB 2: 学歴・職歴 ================= */}
+        {sections.history && visibleTab === 'history' && (
           <div className={styles.tabSection}>
             <div className={styles.historyInfo}>
-              <h3 className={styles.sectionTitle}>学歴・職歴・賞罰 (全21行)</h3>
+              <h3 className={styles.sectionTitle}>{historyLabel} (全21行)</h3>
               <p className={styles.descText}>
                 JIS規格に基づき、1ページ目に14行、2ページ目に7行が自動的に分割されて配置されます。
               </p>
@@ -492,20 +546,20 @@ export default function ResumeForm({ data, onChange, onSave }) {
                   <tr>
                     <th style={{ width: '12%' }}>年</th>
                     <th style={{ width: '8%' }}>月</th>
-                    <th style={{ width: '58%' }}>内容 (学歴・職歴・賞罰)</th>
+                    <th style={{ width: '58%' }}>内容 ({historyLabel})</th>
                     <th style={{ width: '22%' }}>配置 (寄せ)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(data.gridItems || []).map((item, idx) => (
-                    <tr key={idx}>
+                  {visibleGridItems.map(({ item, originalIndex }, idx) => (
+                    <tr key={originalIndex}>
                       <td>
                         <input
                           type="text"
                           className={styles.gridInputCenter}
                           placeholder="2022"
                           value={item.year || ''}
-                          onChange={(e) => updateGridItem(idx, 'year', e.target.value)}
+                          onChange={(e) => updateGridItem(originalIndex, 'year', e.target.value)}
                         />
                       </td>
                       <td>
@@ -514,7 +568,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
                           className={styles.gridInputCenter}
                           placeholder="4"
                           value={item.month || ''}
-                          onChange={(e) => updateGridItem(idx, 'month', e.target.value)}
+                          onChange={(e) => updateGridItem(originalIndex, 'month', e.target.value)}
                         />
                       </td>
                       <td>
@@ -523,14 +577,14 @@ export default function ResumeForm({ data, onChange, onSave }) {
                           className={styles.gridInputLeft}
                           placeholder={idx === 0 ? "学歴の見出しなど" : "○○大学 入学"}
                           value={item.content || ''}
-                          onChange={(e) => updateGridItem(idx, 'content', e.target.value)}
+                          onChange={(e) => updateGridItem(originalIndex, 'content', e.target.value)}
                         />
                       </td>
                       <td>
                         <select
                           className={styles.gridSelect}
                           value={item.align || 'left'}
-                          onChange={(e) => updateGridItem(idx, 'align', e.target.value)}
+                          onChange={(e) => updateGridItem(originalIndex, 'align', e.target.value)}
                         >
                           <option value="left">左寄せ (内容)</option>
                           <option value="center">中央寄せ (見出し)</option>
@@ -546,7 +600,7 @@ export default function ResumeForm({ data, onChange, onSave }) {
         )}
 
         {/* ================= TAB 3: 免許・資格 ================= */}
-        {activeTab === 'license' && (
+        {sections.licenses && visibleTab === 'license' && (
           <div className={styles.tabSection}>
             <div className={styles.historyInfo}>
               <h3 className={styles.sectionTitle}>免許・資格 (全5行)</h3>
@@ -602,32 +656,82 @@ export default function ResumeForm({ data, onChange, onSave }) {
           </div>
         )}
 
-        {/* ================= TAB 4: 自己PR・本人希望欄 ================= */}
-        {activeTab === 'intro' && (
+        {/* ================= TAB 4: 志望理由・自己PR・本人希望欄 ================= */}
+        {showIntroTab && visibleTab === 'intro' && (
           <div className={styles.tabSection}>
-            <h3 className={styles.sectionTitle}>自己PR・本人希望欄</h3>
+            <h3 className={styles.sectionTitle}>志望理由・自己PR・本人希望欄</h3>
 
-            <label className={styles.label}>
+            {sections.motivation && (
+              <label className={styles.label}>
+              志望理由
+              <textarea
+                className={styles.textarea}
+                rows="8"
+                maxLength={MOTIVATION_MAX_LENGTH}
+                placeholder="応募先を志望した理由や、入社後に取り組みたいことを記入してください。"
+                value={data.motivation || ''}
+                onChange={(e) => updateField('motivation', e.target.value)}
+              />
+              <span
+                className={`${styles.characterCount} ${
+                  (data.motivation || '').length >= MOTIVATION_MAX_LENGTH * 0.9
+                    ? styles.characterCountWarning
+                    : ''
+                }`}
+              >
+                {(data.motivation || '').length} / {MOTIVATION_MAX_LENGTH}文字
+                （残り {MOTIVATION_MAX_LENGTH - (data.motivation || '').length}文字）
+              </span>
+              </label>
+            )}
+
+            {sections.selfPR && (
+              <label className={styles.label}>
               自己PR
               <textarea
                 className={styles.textarea}
                 rows="8"
+                maxLength={SELF_PR_MAX_LENGTH}
                 placeholder="ご自身の強みやこれまでの経験、長所などをアピールしてください。"
                 value={data.selfPR || ''}
                 onChange={(e) => updateField('selfPR', e.target.value)}
               />
-            </label>
+              <span
+                className={`${styles.characterCount} ${
+                  (data.selfPR || '').length >= SELF_PR_MAX_LENGTH * 0.9
+                    ? styles.characterCountWarning
+                    : ''
+                }`}
+              >
+                {(data.selfPR || '').length} / {SELF_PR_MAX_LENGTH}文字
+                （残り {SELF_PR_MAX_LENGTH - (data.selfPR || '').length}文字）
+              </span>
+              </label>
+            )}
 
-            <label className={styles.label}>
+            {sections.personalRequest && (
+              <label className={styles.label}>
               本人希望記入欄
               <textarea
                 className={styles.textarea}
                 rows="8"
+                maxLength={PERSONAL_REQUEST_MAX_LENGTH}
                 placeholder="特に給与、職種、勤務時間、勤務地、その他についての希望などがあれば記入してください。"
                 value={data.personalRequest || ''}
                 onChange={(e) => updateField('personalRequest', e.target.value)}
               />
-            </label>
+              <span
+                className={`${styles.characterCount} ${
+                  (data.personalRequest || '').length >= PERSONAL_REQUEST_MAX_LENGTH * 0.9
+                    ? styles.characterCountWarning
+                    : ''
+                }`}
+              >
+                {(data.personalRequest || '').length} / {PERSONAL_REQUEST_MAX_LENGTH}文字
+                （残り {PERSONAL_REQUEST_MAX_LENGTH - (data.personalRequest || '').length}文字）
+              </span>
+              </label>
+            )}
           </div>
         )}
 

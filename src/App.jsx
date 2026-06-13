@@ -4,6 +4,63 @@ import Home from './pages/Home/Home'
 import ResumeForm from './pages/ResumeForm/ResumeForm'
 import ResumePreview from './pages/ResumePreview/ResumePreview'
 
+const LEGACY_STORAGE_KEY = 'resume_full_tdu'
+const DRAFTS_STORAGE_KEY = 'resume_drafts_v1'
+
+const TEMPLATE_SECTION_PRESETS = {
+  internship: {
+    photo: true,
+    gender: false,
+    alternateContact: false,
+    history: true,
+    licenses: false,
+    motivation: true,
+    selfPR: true,
+    personalRequest: false
+  },
+  employment: {
+    photo: true,
+    gender: true,
+    alternateContact: true,
+    history: true,
+    licenses: true,
+    motivation: true,
+    selfPR: true,
+    personalRequest: true
+  },
+  parttime: {
+    photo: true,
+    gender: false,
+    alternateContact: false,
+    history: true,
+    licenses: false,
+    motivation: false,
+    selfPR: false,
+    personalRequest: true
+  },
+  custom: {
+    photo: true,
+    gender: true,
+    alternateContact: true,
+    history: true,
+    licenses: true,
+    motivation: true,
+    selfPR: true,
+    personalRequest: true
+  }
+}
+
+const SECTION_OPTIONS = [
+  { id: 'photo', label: '証明写真' },
+  { id: 'gender', label: '性別' },
+  { id: 'alternateContact', label: '現住所以外の連絡先' },
+  { id: 'history', label: '学歴・職歴' },
+  { id: 'licenses', label: '免許・資格' },
+  { id: 'motivation', label: '志望理由' },
+  { id: 'selfPR', label: '自己PR' },
+  { id: 'personalRequest', label: '本人希望記入欄' }
+]
+
 function getTodayParts() {
   const today = new Date()
   return {
@@ -43,6 +100,7 @@ const todayParts = getTodayParts()
 
 const defaultData = {
   templateType: 'employment',
+  templateSections: TEMPLATE_SECTION_PRESETS.employment,
 
   // 履歴書 共通日付
   resumeDate: todayParts,
@@ -68,7 +126,7 @@ const defaultData = {
   altTel: '',
   altEmail: '',
   
-  // 学歴・職歴・賞罰 (21行)
+  // 学歴・職歴 (プレビューでは最大21行)
   gridItems: [
     { year: '', month: '', content: '学　　歴', align: 'center' },
     { year: '', month: '', content: '', align: 'left' },
@@ -80,9 +138,9 @@ const defaultData = {
     { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
-    { year: '', month: '', content: '賞　　罰', align: 'center' },
-    { year: '', month: '', content: 'な　し', align: 'left' },
     { year: '', month: '', content: '以　　上', align: 'right' },
+    { year: '', month: '', content: '', align: 'left' },
+    { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
     { year: '', month: '', content: '', align: 'left' },
@@ -105,54 +163,152 @@ const defaultData = {
   // 自己PR
   selfPR: '',
 
+  // 志望理由
+  motivation: '',
+
   // 本人希望記入欄
   personalRequest: '',
   
 }
 
-function App() {
-  const [currentView, setCurrentView] = useState('home')
-  const [hasSavedData, setHasSavedData] = useState(
-    () => Boolean(localStorage.getItem('resume_full_tdu'))
-  )
-  const [data, setData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('resume_full_tdu')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        const savedResumeDate = parsed.resumeDate || {}
-        const hasSavedResumeDate =
-          savedResumeDate.year || savedResumeDate.month || savedResumeDate.day
-        const resumeDate = hasSavedResumeDate ? savedResumeDate : getTodayParts()
-        const birthDate = {
-          ...defaultData.birthDate,
-          ...(parsed.birthDate || {})
-        }
+function createDefaultData(
+  templateType = 'employment',
+  templateSections = TEMPLATE_SECTION_PRESETS[templateType]
+) {
+  return {
+    ...structuredClone(defaultData),
+    templateType,
+    templateSections: {
+      ...(TEMPLATE_SECTION_PRESETS[templateType] || TEMPLATE_SECTION_PRESETS.custom),
+      ...(templateSections || {})
+    },
+    resumeDate: getTodayParts()
+  }
+}
 
-        if (!birthDate.age) {
-          birthDate.age = calculateAge(birthDate, resumeDate)
-        }
-
-        return {
-          ...defaultData,
-          ...parsed,
-          resumeDate,
-          birthDate
-        }
-      }
-    } catch (e) {
-      console.error(e)
+function normalizeHistoryItems(items = []) {
+  const seenHeadings = new Set()
+  const normalizedItems = items.filter((item) => {
+    const content = (item.content || '').replaceAll('　', '').trim()
+    if (content === '賞罰' || content === 'なし') {
+      return false
     }
-    return defaultData
+
+    if (content === '学歴' || content === '職歴') {
+      if (seenHeadings.has(content)) {
+        return false
+      }
+      seenHeadings.add(content)
+    }
+
+    return true
   })
 
-  function handleSave(d) {
-    localStorage.setItem('resume_full_tdu', JSON.stringify(d))
-    setHasSavedData(true)
-    alert('入力データを保存しました（ブラウザに一時保存されます）')
+  while (normalizedItems.length < 21) {
+    normalizedItems.push({ year: '', month: '', content: '', align: 'left' })
   }
 
-  async function handleExportPDF() {
+  return normalizedItems.slice(0, 21)
+}
+
+function normalizeData(savedData = {}) {
+  const savedResumeDate = savedData.resumeDate || {}
+  const hasSavedResumeDate =
+    savedResumeDate.year || savedResumeDate.month || savedResumeDate.day
+  const resumeDate = hasSavedResumeDate ? savedResumeDate : getTodayParts()
+  const birthDate = {
+    ...defaultData.birthDate,
+    ...(savedData.birthDate || {})
+  }
+
+  if (!birthDate.age) {
+    birthDate.age = calculateAge(birthDate, resumeDate)
+  }
+
+  return {
+    ...createDefaultData(savedData.templateType, savedData.templateSections),
+    ...savedData,
+    templateSections: {
+      ...createDefaultData(savedData.templateType, savedData.templateSections).templateSections,
+      awards: undefined
+    },
+    resumeDate,
+    birthDate,
+    gridItems: normalizeHistoryItems(savedData.gridItems)
+  }
+}
+
+function loadDrafts() {
+  try {
+    const savedDrafts = localStorage.getItem(DRAFTS_STORAGE_KEY)
+    if (savedDrafts) {
+      const parsedDrafts = JSON.parse(savedDrafts)
+      if (Array.isArray(parsedDrafts)) {
+        return parsedDrafts.map((draft) => ({
+          ...draft,
+          data: normalizeData(draft.data)
+        }))
+      }
+    }
+
+    const legacyDraft = localStorage.getItem(LEGACY_STORAGE_KEY)
+    if (legacyDraft) {
+      const migratedDraft = {
+        id: `draft-${Date.now()}`,
+        title: '保存済みの履歴書',
+        updatedAt: new Date().toISOString(),
+        data: normalizeData(JSON.parse(legacyDraft))
+      }
+      localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify([migratedDraft]))
+      localStorage.removeItem(LEGACY_STORAGE_KEY)
+      return [migratedDraft]
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
+  return []
+}
+
+function App() {
+  const [currentView, setCurrentView] = useState('home')
+  const [isPdfCheckOpen, setIsPdfCheckOpen] = useState(false)
+  const [isSectionSettingsOpen, setIsSectionSettingsOpen] = useState(false)
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const [drafts, setDrafts] = useState(loadDrafts)
+  const [activeDraftId, setActiveDraftId] = useState(drafts[0]?.id || null)
+  const [data, setData] = useState(
+    () => drafts[0]?.data || createDefaultData()
+  )
+
+  function handleSave(d) {
+    const currentDraft = drafts.find((draft) => draft.id === activeDraftId)
+    const title = currentDraft?.title || window.prompt(
+      '下書きの名前を入力してください。',
+      `${d.name || '名称未設定'}の履歴書`
+    )
+
+    if (!title?.trim()) return
+
+    const id = currentDraft?.id || `draft-${Date.now()}`
+    const savedDraft = {
+      id,
+      title: title.trim(),
+      updatedAt: new Date().toISOString(),
+      data: d
+    }
+    const nextDrafts = [
+      savedDraft,
+      ...drafts.filter((draft) => draft.id !== id)
+    ]
+
+    setDrafts(nextDrafts)
+    setActiveDraftId(id)
+    localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(nextDrafts))
+    alert(`「${savedDraft.title}」を一時保存しました。`)
+  }
+
+  async function generatePDF() {
     function loadScript(src) {
       return new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) return resolve()
@@ -167,6 +323,7 @@ function App() {
     const container = document.getElementById('resume-preview')
     if (!container) return alert('プレビューが見つかりません')
 
+    setIsExportingPdf(true)
     try {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')
       await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js')
@@ -242,40 +399,94 @@ function App() {
       }
 
       pdf.save(`resume-${Date.now()}.pdf`)
+      setIsPdfCheckOpen(false)
     } catch (err) {
       console.error(err)
       alert('PDF生成に失敗しました：' + (err.message || err))
+    } finally {
+      setIsExportingPdf(false)
     }
   }
 
   function handleReset() {
     if (!confirm('全ての入力内容をクリアして初期化しますか？')) return
-    setData(defaultData)
-    localStorage.removeItem('resume_full_tdu')
-    setHasSavedData(false)
+    setData(createDefaultData(data.templateType, data.templateSections))
   }
 
-  function handleSelectTemplate(templateType) {
-    setData((currentData) => ({
-      ...currentData,
-      templateType
-    }))
+  function handleSelectTemplate(templateType, templateSections) {
+    setData(createDefaultData(templateType, templateSections))
+    setActiveDraftId(null)
     setCurrentView('editor')
+  }
+
+  function handleOpenDraft(draftId) {
+    const draft = drafts.find((item) => item.id === draftId)
+    if (!draft) return
+    setData(normalizeData(draft.data))
+    setActiveDraftId(draft.id)
+    setCurrentView('editor')
+  }
+
+  function handleDeleteDraft(draftId) {
+    const draft = drafts.find((item) => item.id === draftId)
+    if (!draft || !confirm(`「${draft.title}」を削除しますか？`)) return
+
+    const nextDrafts = drafts.filter((item) => item.id !== draftId)
+    setDrafts(nextDrafts)
+    localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(nextDrafts))
+
+    if (activeDraftId === draftId) {
+      setActiveDraftId(null)
+      setData(createDefaultData())
+    }
   }
 
   const templateLabels = {
     internship: 'インターン用',
     employment: '就職用',
-    parttime: 'バイト用'
+    parttime: 'バイト用',
+    custom: 'カスタム'
   }
   const selectedTemplateLabel =
     templateLabels[data.templateType] || templateLabels.employment
+  const hasBirthDate = Boolean(
+    data.birthDate?.year && data.birthDate?.month && data.birthDate?.day
+  )
+  const hasHistoryEntry = (data.gridItems || []).some((item) => {
+    const normalizedContent = (item.content || '').replaceAll('　', '').trim()
+    return (item.year || item.month) && normalizedContent
+  })
+  const pdfChecks = [
+    { label: '氏名', complete: Boolean(data.name?.trim()), required: true },
+    { label: '生年月日', complete: hasBirthDate, required: true },
+    { label: '現住所', complete: Boolean(data.address?.trim()), required: true },
+    {
+      label: '電話番号またはE-mail',
+      complete: Boolean(data.tel?.trim() || data.email?.trim()),
+      required: true
+    },
+    ...(data.templateSections?.history
+      ? [{ label: '学歴・職歴', complete: hasHistoryEntry, required: true }]
+      : []),
+    { label: 'ふりがな', complete: Boolean(data.nameFurigana?.trim()), required: false },
+    ...(data.templateSections?.photo
+      ? [{ label: '証明写真', complete: Boolean(data.photo), required: false }]
+      : []),
+    ...(data.templateSections?.motivation
+      ? [{ label: '志望理由', complete: Boolean(data.motivation?.trim()), required: false }]
+      : []),
+    ...(data.templateSections?.selfPR
+      ? [{ label: '自己PR', complete: Boolean(data.selfPR?.trim()), required: false }]
+      : [])
+  ]
+  const hasPdfErrors = pdfChecks.some((item) => item.required && !item.complete)
 
   if (currentView === 'home') {
     return (
       <Home
-        hasSavedData={hasSavedData}
-        onContinue={() => setCurrentView('editor')}
+        drafts={drafts}
+        onOpenDraft={handleOpenDraft}
+        onDeleteDraft={handleDeleteDraft}
         onSelectTemplate={handleSelectTemplate}
       />
     )
@@ -295,10 +506,22 @@ function App() {
             </svg>
             ホーム
           </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setIsSectionSettingsOpen(true)}
+          >
+            <svg className="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5h10v2H4V5Zm0 6h16v2H4v-2Zm0 6h7v2H4v-2Zm13-13h3v4h-3V4Zm-4 12h3v4h-3v-4Z" />
+            </svg>
+            項目設定
+          </button>
           <button className="btn btn-danger" onClick={handleReset}>
             初期化
           </button>
-          <button className="btn btn-primary btn-lg" onClick={handleExportPDF}>
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={() => setIsPdfCheckOpen(true)}
+          >
             <svg
               className="btn-icon"
               viewBox="0 0 24 24"
@@ -314,17 +537,160 @@ function App() {
       
       <div className="workspace-grid">
         <div className="editor-pane">
-          <ResumeForm data={data} onChange={setData} onSave={handleSave} />
+          <ResumeForm
+            data={data}
+            onChange={setData}
+            onSave={handleSave}
+            sections={data.templateSections}
+          />
         </div>
         <div className="preview-pane">
           <div className="preview-sticky-container">
             <div className="preview-info-banner">
               <span>💡</span> 右側は印刷プレビューです。A4用紙2枚に印刷・PDF保存できるように最適化されています。
             </div>
-            <ResumePreview data={data} />
+            <ResumePreview data={data} sections={data.templateSections} />
           </div>
         </div>
       </div>
+
+      {isPdfCheckOpen && (
+        <div
+          className="pdf-check-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isExportingPdf) {
+              setIsPdfCheckOpen(false)
+            }
+          }}
+        >
+          <section
+            className="pdf-check-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pdf-check-title"
+          >
+            <div className="pdf-check-header">
+              <div>
+                <span className="pdf-check-eyebrow">Before Export</span>
+                <h2 id="pdf-check-title">PDF出力前チェック</h2>
+              </div>
+              <button
+                className="pdf-check-close"
+                type="button"
+                onClick={() => setIsPdfCheckOpen(false)}
+                disabled={isExportingPdf}
+                aria-label="閉じる"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="pdf-check-description">
+              必須項目を確認してください。推奨項目は未入力でもPDFを出力できます。
+            </p>
+
+            <ul className="pdf-check-list">
+              {pdfChecks.map((item) => (
+                <li
+                  key={item.label}
+                  className={item.complete ? 'is-complete' : 'is-incomplete'}
+                >
+                  <span className="pdf-check-status" aria-hidden="true">
+                    {item.complete ? '✓' : '!'}
+                  </span>
+                  <span>{item.label}</span>
+                  <small>{item.required ? '必須' : '推奨'}</small>
+                </li>
+              ))}
+            </ul>
+
+            {hasPdfErrors && (
+              <p className="pdf-check-error">
+                未入力の必須項目を入力してからPDFを出力してください。
+              </p>
+            )}
+
+            <div className="pdf-check-actions">
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => setIsPdfCheckOpen(false)}
+                disabled={isExportingPdf}
+              >
+                戻って修正
+              </button>
+              <button
+                className="btn btn-primary btn-lg"
+                type="button"
+                onClick={generatePDF}
+                disabled={hasPdfErrors || isExportingPdf}
+              >
+                {isExportingPdf ? 'PDFを作成中...' : '確認してPDF出力'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {isSectionSettingsOpen && (
+        <div className="pdf-check-backdrop" role="presentation">
+          <section
+            className="pdf-check-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="section-settings-title"
+          >
+            <div className="pdf-check-header">
+              <div>
+                <span className="pdf-check-eyebrow">Resume Sections</span>
+                <h2 id="section-settings-title">履歴書の項目設定</h2>
+              </div>
+              <button
+                className="pdf-check-close"
+                type="button"
+                onClick={() => setIsSectionSettingsOpen(false)}
+                aria-label="閉じる"
+              >
+                ×
+              </button>
+            </div>
+            <p className="pdf-check-description">
+              基本情報・生年月日・現住所・連絡先は常に表示されます。
+            </p>
+            <div className="section-settings-grid">
+              {SECTION_OPTIONS.map((option) => (
+                <label className="section-setting-option" key={option.id}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(data.templateSections?.[option.id])}
+                    onChange={(event) => {
+                      setData((currentData) => ({
+                        ...currentData,
+                        templateType: 'custom',
+                        templateSections: {
+                          ...currentData.templateSections,
+                          [option.id]: event.target.checked
+                        }
+                      }))
+                    }}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="pdf-check-actions">
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => setIsSectionSettingsOpen(false)}
+              >
+                設定を反映
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
