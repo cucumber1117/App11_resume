@@ -476,7 +476,7 @@ export default function PortfolioForm({ data, onChange, onSave }) {
       </section>
 
       <div className={styles.footer}>
-        <button type="submit">下書きを保存</button>
+        <button type="submit">一時保存する</button>
       </div>
     </form>
   )

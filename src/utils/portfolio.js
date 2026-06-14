@@ -64,6 +64,19 @@ export const TECHNOLOGY_GROUPS = [
   {
     label: 'デザイン',
     items: ['Figma', 'Adobe XD', 'Photoshop', 'Illustrator']
+  },
+  {
+    label: '3D・CAD',
+    items: [
+      'Maya',
+      'Blender',
+      'AutoCAD',
+      'Fusion 360',
+      'SolidWorks',
+      'SketchUp',
+      'Rhinoceros',
+      '3ds Max'
+    ]
   }
 ]
 

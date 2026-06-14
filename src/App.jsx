@@ -745,6 +745,15 @@ function App() {
               初期化
             </button>
             <button
+              className="btn btn-secondary"
+              onClick={() => handlePortfolioSave(portfolioData)}
+            >
+              <svg className="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 3h13l3 3v15H4V3Zm2 2v14h12V7l-2-2H6Zm2 1h7v5H8V6Zm2 2v1h3V8h-3Zm-2 5h8v4H8v-4Z" />
+              </svg>
+              一時保存
+            </button>
+            <button
               className="btn btn-primary btn-lg"
               onClick={() => setIsPdfCheckOpen(true)}
             >
