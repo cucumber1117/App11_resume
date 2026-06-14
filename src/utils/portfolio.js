@@ -1,3 +1,11 @@
+export function createPortfolioScreenshot() {
+  return {
+    id: crypto.randomUUID?.() || `screenshot-${Date.now()}-${Math.random()}`,
+    image: '',
+    caption: ''
+  }
+}
+
 export function createPortfolioProject() {
   return {
     id: crypto.randomUUID?.() || `project-${Date.now()}-${Math.random()}`,
@@ -6,6 +14,7 @@ export function createPortfolioProject() {
     description: '',
     technologies: '',
     url: '',
-    image: ''
+    image: '',
+    screenshots: [createPortfolioScreenshot()]
   }
 }

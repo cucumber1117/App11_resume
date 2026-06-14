@@ -5,7 +5,10 @@ import PortfolioForm from './pages/PortfolioForm/PortfolioForm'
 import PortfolioPreview from './pages/PortfolioPreview/PortfolioPreview'
 import ResumeForm from './pages/ResumeForm/ResumeForm'
 import ResumePreview from './pages/ResumePreview/ResumePreview'
-import { createPortfolioProject } from './utils/portfolio'
+import {
+  createPortfolioProject,
+  createPortfolioScreenshot
+} from './utils/portfolio'
 
 const LEGACY_STORAGE_KEY = 'resume_full_tdu'
 const DRAFTS_STORAGE_KEY = 'resume_drafts_v1'
@@ -223,10 +226,12 @@ const defaultData = {
 
 const defaultPortfolioData = {
   name: '',
-  jobTitle: '',
+  universityName: '',
+  facultyName: '',
+  departmentName: '',
+  profile: '',
   bio: '',
   email: '',
-  website: '',
   skills: '',
   accentColor: '#6d4aff'
 }
@@ -240,15 +245,32 @@ function createDefaultPortfolioData() {
 
 function normalizePortfolioData(savedData = {}) {
   const projects = Array.isArray(savedData.projects) && savedData.projects.length > 0
-    ? savedData.projects.map((project) => ({
-      ...createPortfolioProject(),
-      ...project
-    }))
+    ? savedData.projects.map((project) => {
+      const savedScreenshots = Array.isArray(project.screenshots)
+        ? project.screenshots
+        : []
+      const screenshots = savedScreenshots.length > 0
+        ? savedScreenshots.map((screenshot) => ({
+          ...createPortfolioScreenshot(),
+          ...screenshot
+        }))
+        : [{
+          ...createPortfolioScreenshot(),
+          image: project.image || ''
+        }]
+
+      return {
+        ...createPortfolioProject(),
+        ...project,
+        screenshots
+      }
+    })
     : [createPortfolioProject()]
 
   return {
     ...createDefaultPortfolioData(),
     ...savedData,
+    profile: savedData.profile || savedData.jobTitle || '',
     projects
   }
 }
@@ -442,10 +464,15 @@ function App() {
       ...portfolioDrafts.filter((draft) => draft.id !== id)
     ]
 
-    setPortfolioDrafts(nextDrafts)
-    setActivePortfolioDraftId(id)
-    localStorage.setItem(PORTFOLIO_DRAFTS_STORAGE_KEY, JSON.stringify(nextDrafts))
-    alert(`「${savedDraft.title}」を一時保存しました。`)
+    try {
+      localStorage.setItem(PORTFOLIO_DRAFTS_STORAGE_KEY, JSON.stringify(nextDrafts))
+      setPortfolioDrafts(nextDrafts)
+      setActivePortfolioDraftId(id)
+      alert(`「${savedDraft.title}」を一時保存しました。`)
+    } catch (error) {
+      console.error(error)
+      alert('画像データが多いため保存できませんでした。画像枚数を減らしてください。')
+    }
   }
 
   async function generatePDF({
@@ -673,18 +700,30 @@ function App() {
 
   if (currentView === 'portfolio') {
     const portfolioChecks = [
-      { label: '氏名・活動名', complete: Boolean(portfolioData.name.trim()), required: true },
-      { label: '肩書き', complete: Boolean(portfolioData.jobTitle.trim()), required: true },
-      { label: '自己紹介', complete: Boolean(portfolioData.bio.trim()), required: false },
+      { label: '氏名', complete: Boolean(portfolioData.name.trim()), required: true },
+      { label: '大学名', complete: Boolean(portfolioData.universityName.trim()), required: true },
       {
-        label: '制作実績',
+        label: '学部・学科',
+        complete: Boolean(
+          portfolioData.facultyName.trim() || portfolioData.departmentName.trim()
+        ),
+        required: true
+      },
+      { label: '連絡先メール', complete: Boolean(portfolioData.email.trim()), required: true },
+      { label: '自己紹介', complete: Boolean(portfolioData.bio.trim()), required: false },
+      { label: 'プロフィール', complete: Boolean(portfolioData.profile.trim()), required: false },
+      { label: '使用技術', complete: Boolean(portfolioData.skills.trim()), required: false },
+      {
+        label: '制作物',
         complete: portfolioData.projects.some((project) => project.title.trim()),
         required: true
       },
       {
-        label: '連絡先',
-        complete: Boolean(portfolioData.email.trim() || portfolioData.website.trim()),
-        required: false
+        label: '制作物画像',
+        complete: portfolioData.projects.some((project) => (
+          project.screenshots.some((screenshot) => Boolean(screenshot.image))
+        )),
+        required: true
       }
     ]
     const hasPortfolioErrors = portfolioChecks.some(
@@ -695,8 +734,8 @@ function App() {
       <div className="app-container">
         <header className="app-header">
           <div className="header-brand">
-            <span className="badge">Portfolio</span>
-            <h1>ポートフォリオ 作成ツール</h1>
+            <span className="badge">Student Portfolio</span>
+            <h1>学生用ポートフォリオ 作成ツール</h1>
           </div>
           <div className="header-actions">
             <button className="btn btn-secondary" onClick={() => setCurrentView('home')}>

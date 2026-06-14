@@ -252,10 +252,10 @@ export default function Home({
       <section className={styles.portfolioSection}>
         <div className={styles.portfolioCopy}>
           <span className={styles.eyebrow}>Create Portfolio</span>
-          <h2>作品とスキルを、ひとつの資料に。</h2>
+          <h2>学生生活の学びと制作物を、ひとつの資料に。</h2>
           <p>
-            プロフィール、スキル、制作実績を整理して、
-            応募時に添付できるA4ポートフォリオを作成できます。
+            大学情報、自己紹介、プロフィール、使用技術、制作物を整理して、
+            就職・インターン応募に使えるA4ポートフォリオを作成できます。
           </p>
           <button type="button" onClick={onCreatePortfolio}>
             新しいポートフォリオを作成
@@ -263,7 +263,7 @@ export default function Home({
         </div>
         <div className={styles.portfolioMock} aria-hidden="true">
           <span>PORTFOLIO</span>
-          <strong>Selected Works</strong>
+          <strong>Student Works</strong>
           <div>
             <i />
             <i />

@@ -16,7 +16,6 @@
 .sectionHeader,
 .projectHeader,
 .footer,
-.imageInput,
 .colorField span {
   display: flex;
   align-items: center;
@@ -109,7 +108,7 @@
 
 .addButton,
 .projectHeader button,
-.imageInput button {
+.screenshotHeader button {
   padding: 7px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -146,17 +145,94 @@
 }
 
 .projectHeader button,
-.imageInput button {
+.screenshotHeader button {
   color: #cf1322;
 }
 
-.imageInput {
-  justify-content: flex-start;
+.screenshotList {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 12px;
 }
 
-.imageInput input {
-  padding: 7px;
+.screenshotEditor {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
   background: var(--bg);
+}
+
+.screenshotHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 11px;
+}
+
+.screenshotHeader strong {
+  font-size: 12px;
+}
+
+.screenshotHeader button {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.screenshotFields {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1.3fr);
+  gap: 14px;
+}
+
+.imagePicker {
+  position: relative;
+  display: grid !important;
+  min-height: 130px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed var(--accent-border);
+  border-radius: 8px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  cursor: pointer;
+}
+
+.imagePicker img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  background: var(--code-bg);
+}
+
+.imagePicker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.addScreenshotButton {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 8px 11px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.addScreenshotButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .footer {
@@ -189,5 +265,9 @@
   .sectionHeader {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .screenshotFields {
+    grid-template-columns: 1fr;
   }
 }

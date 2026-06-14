@@ -1,4 +1,7 @@
 .preview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   width: 100%;
   overflow: auto;
 }
@@ -53,7 +56,7 @@
   letter-spacing: -0.045em;
 }
 
-.jobTitle {
+.school {
   color: #68636f;
   font-size: 11px;
 }
@@ -69,14 +72,28 @@
   overflow-wrap: anywhere;
 }
 
-.profile {
+.contact > span {
+  color: var(--portfolio-accent);
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.contact strong {
+  color: #45404a;
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.aboutGrid {
   display: grid;
-  grid-template-columns: 25mm 1fr;
-  gap: 5mm;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8mm;
   padding: 8mm 0;
 }
 
-.profile h2,
+.aboutBlock h2,
+.technologies h2,
 .worksHeading h2 {
   margin: 0;
   color: #17151c;
@@ -85,17 +102,28 @@
   letter-spacing: 0.1em;
 }
 
-.profile p {
-  margin: 0;
+.aboutBlock {
+  padding-left: 4mm;
+  border-left: 1.5mm solid var(--portfolio-accent);
+}
+
+.aboutBlock p {
+  margin: 3mm 0 0;
   color: #45404a;
   font-size: 9px;
   line-height: 1.75;
   white-space: pre-wrap;
 }
 
+.technologies {
+  display: grid;
+  grid-template-columns: 25mm 1fr;
+  gap: 5mm;
+  padding: 1mm 0 8mm;
+}
+
 .skills {
   display: flex;
-  grid-column: 2;
   flex-wrap: wrap;
   gap: 2mm;
 }
@@ -163,24 +191,10 @@
   padding: 4mm;
 }
 
-.projectTitle {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 3mm;
-}
-
-.projectTitle h3 {
+.projectBody h3 {
   margin: 0;
   color: #17151c;
   font-size: 11px;
-}
-
-.projectTitle > span {
-  color: var(--portfolio-accent);
-  font-size: 6px;
-  font-weight: 700;
-  text-align: right;
 }
 
 .projectBody p {
@@ -190,17 +204,6 @@
   font-size: 7.5px;
   line-height: 1.55;
   white-space: pre-wrap;
-}
-
-.projectBody footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 3mm;
-  padding-top: 2.5mm;
-  border-top: 1px solid #ebe9ee;
-  color: #89848e;
-  font-size: 6px;
-  overflow-wrap: anywhere;
 }
 
 .pageFooter {
@@ -218,6 +221,90 @@
 
 .pageFooter strong {
   color: #36313b;
+}
+
+.detailSheet {
+  padding-top: 15mm;
+}
+
+.detailHeader {
+  padding-bottom: 7mm;
+  border-bottom: 2px solid #17151c;
+}
+
+.detailHeader > span {
+  color: var(--portfolio-accent);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.detailHeader h2 {
+  margin: 3mm 0 2mm;
+  color: #17151c;
+  font-size: 25px;
+  letter-spacing: -0.03em;
+}
+
+.detailHeader p {
+  max-width: 150mm;
+  margin: 0;
+  color: #5d5863;
+  font-size: 8.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.screenshotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7mm 6mm;
+  margin-top: 8mm;
+}
+
+.screenshot {
+  margin: 0;
+}
+
+.screenshotImage {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #d8d5dc;
+  color: #ffffff;
+  background: linear-gradient(135deg, #24152f, var(--portfolio-accent));
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.screenshotImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f6f5f7;
+}
+
+.screenshot figcaption {
+  display: grid;
+  grid-template-columns: 8mm 1fr;
+  gap: 2mm;
+  padding-top: 3mm;
+}
+
+.screenshot figcaption strong {
+  color: var(--portfolio-accent);
+  font-size: 8px;
+}
+
+.screenshot figcaption p {
+  margin: 0;
+  color: #4f4a55;
+  font-size: 7.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 @media (max-width: 900px) {
