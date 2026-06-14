@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import styles from './PortfolioForm.module.css'
 import {
   createPortfolioProject,
-  createPortfolioScreenshot
+  createPortfolioScreenshot,
+  parseTechnologies,
+  TECHNOLOGY_GROUPS
 } from '../../utils/portfolio'
 
 const MAX_PROJECTS = 6
 const MAX_SCREENSHOTS = 4
-
 function readImage(file, onLoad) {
   if (!file || !file.type.startsWith('image/')) return
   if (file.size > 10 * 1024 * 1024) {
@@ -34,8 +36,47 @@ function readImage(file, onLoad) {
 }
 
 export default function PortfolioForm({ data, onChange, onSave }) {
+  const [technologyInput, setTechnologyInput] = useState('')
+  const [technologyCategory, setTechnologyCategory] = useState(
+    TECHNOLOGY_GROUPS[0].label
+  )
+  const technologies = parseTechnologies(data.skills)
+
   function updateField(field, value) {
     onChange({ ...data, [field]: value })
+  }
+
+  function addTechnology(value = technologyInput, category = technologyCategory) {
+    const additions = parseTechnologies(value)
+    if (additions.length === 0) return
+    const nextTechnologies = [...technologies]
+    const technologyCategories = { ...(data.technologyCategories || {}) }
+
+    additions.forEach((technology) => {
+      if (!nextTechnologies.some(
+        (item) => item.toLowerCase() === technology.toLowerCase()
+      )) {
+        nextTechnologies.push(technology)
+      }
+      technologyCategories[technology] = category
+    })
+
+    onChange({
+      ...data,
+      skills: nextTechnologies.join(', '),
+      technologyCategories
+    })
+    setTechnologyInput('')
+  }
+
+  function removeTechnology(technology) {
+    const technologyCategories = { ...(data.technologyCategories || {}) }
+    delete technologyCategories[technology]
+    onChange({
+      ...data,
+      skills: technologies.filter((item) => item !== technology).join(', '),
+      technologyCategories
+    })
   }
 
   function updateProject(id, field, value) {
@@ -195,15 +236,91 @@ export default function PortfolioForm({ data, onChange, onSave }) {
             />
             <small>{data.bio.length} / 500文字</small>
           </label>
-          <label className={styles.fullWidth}>
+          <div className={`${styles.fullWidth} ${styles.technologyField}`}>
             使用技術
-            <input
-              value={data.skills}
-              onChange={(event) => updateField('skills', event.target.value)}
-              placeholder="React, JavaScript, HTML, CSS, Figma"
-            />
-            <small>カンマ区切りで入力してください。</small>
-          </label>
+            <div className={styles.technologyInputRow}>
+              <select
+                value={technologyCategory}
+                onChange={(event) => setTechnologyCategory(event.target.value)}
+                aria-label="追加先のカテゴリ"
+              >
+                {[
+                  ...TECHNOLOGY_GROUPS.map((group) => group.label),
+                  'その他'
+                ].map((label) => (
+                  <option value={label} key={label}>{label}</option>
+                ))}
+              </select>
+              <input
+                value={technologyInput}
+                onChange={(event) => {
+                  const value = event.target.value
+                  if (value.endsWith(',') || value.endsWith('、')) {
+                    addTechnology(value.slice(0, -1))
+                    return
+                  }
+                  setTechnologyInput(value)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    addTechnology()
+                  }
+                }}
+                placeholder="例: React"
+              />
+              <button type="button" onClick={() => addTechnology()}>
+                追加
+              </button>
+            </div>
+            {technologies.length > 0 && (
+              <div className={styles.technologyTags}>
+                {technologies.map((technology) => (
+                  <span key={technology}>
+                    <small>
+                      {data.technologyCategories?.[technology] || '自動分類'}
+                    </small>
+                    <strong>{technology}</strong>
+                    <button
+                      type="button"
+                      onClick={() => removeTechnology(technology)}
+                      aria-label={`${technology}を削除`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className={styles.technologySuggestions}>
+              <small>主要な言語・サービスから追加</small>
+              {TECHNOLOGY_GROUPS.map((group) => {
+                const availableItems = group.items.filter((technology) => (
+                  !technologies.some(
+                    (item) => item.toLowerCase() === technology.toLowerCase()
+                  )
+                ))
+                if (availableItems.length === 0) return null
+
+                return (
+                  <div className={styles.technologySuggestionGroup} key={group.label}>
+                    <strong>{group.label}</strong>
+                    <div>
+                      {availableItems.map((technology) => (
+                        <button
+                          type="button"
+                          key={technology}
+                          onClick={() => addTechnology(technology, group.label)}
+                        >
+                          ＋ {technology}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -255,6 +372,37 @@ export default function PortfolioForm({ data, onChange, onSave }) {
                     placeholder="制作した目的、特徴、工夫した点などを記入します。"
                   />
                 </label>
+                <div className={`${styles.fullWidth} ${styles.projectUrlField}`}>
+                  <label>
+                    制作物URL
+                    <input
+                      type="url"
+                      value={project.url}
+                      onChange={(event) => updateProject(
+                        project.id,
+                        'url',
+                        event.target.value
+                      )}
+                      placeholder="https://example.com"
+                    />
+                  </label>
+                  <label className={styles.urlToggle}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(project.showUrl)}
+                      onChange={(event) => updateProject(
+                        project.id,
+                        'showUrl',
+                        event.target.checked
+                      )}
+                    />
+                    <span aria-hidden="true" />
+                    PDFにURLを表示
+                  </label>
+                  {!project.url && project.showUrl && (
+                    <small>表示するURLを入力してください。</small>
+                  )}
+                </div>
                 <label className={styles.fullWidth}>
                   制作物の画像と説明
                   <small>

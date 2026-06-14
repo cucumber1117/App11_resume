@@ -89,6 +89,142 @@
   grid-column: 1 / -1;
 }
 
+.technologyField {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.technologyInputRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.35fr) 1fr auto;
+  gap: 8px;
+}
+
+.technologyInputRow select {
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-h);
+  background: var(--bg);
+  font: inherit;
+  font-size: 12px;
+}
+
+.technologyInputRow button {
+  padding: 0 17px;
+  border: 0;
+  border-radius: 7px;
+  color: #ffffff;
+  background: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.technologyTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 34px;
+  padding: 10px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-bg);
+}
+
+.technologyTags > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px 6px 11px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.technologyTags small {
+  padding-right: 7px;
+  border-right: 1px solid var(--border);
+  color: var(--text);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.technologyTags strong {
+  font-size: 12px;
+}
+
+.technologyTags button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--code-bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.technologySuggestions {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+
+.technologySuggestions > small {
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.technologySuggestionGroup {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: start;
+  gap: 8px;
+}
+
+.technologySuggestionGroup > strong {
+  padding-top: 5px;
+  color: var(--text);
+  font-size: 10px;
+}
+
+.technologySuggestionGroup > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.technologySuggestions button {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-h);
+  background: var(--code-bg);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.technologySuggestions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .colorField {
   max-width: 190px;
 }
@@ -147,6 +283,80 @@
 .projectHeader button,
 .screenshotHeader button {
   color: #cf1322;
+}
+
+.projectUrlField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.projectUrlField > label:first-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.projectUrlField > small {
+  grid-column: 1 / -1;
+  color: #cf1322;
+  font-size: 10px;
+}
+
+.urlToggle {
+  display: inline-flex !important;
+  min-height: 39px;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  font-size: 11px !important;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.urlToggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.urlToggle > span {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 99px;
+  background: var(--border);
+  transition: background 0.2s;
+}
+
+.urlToggle > span::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+  content: '';
+  transition: transform 0.2s;
+}
+
+.urlToggle:has(input:checked) > span {
+  background: var(--accent);
+}
+
+.urlToggle:has(input:checked) > span::after {
+  transform: translateX(14px);
 }
 
 .screenshotList {
@@ -269,5 +479,21 @@
 
   .screenshotFields {
     grid-template-columns: 1fr;
+  }
+
+  .technologyInputRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .technologyInputRow select {
+    grid-column: 1 / -1;
+  }
+
+  .projectUrlField {
+    grid-template-columns: 1fr;
+  }
+
+  .urlToggle {
+    justify-self: start;
   }
 }

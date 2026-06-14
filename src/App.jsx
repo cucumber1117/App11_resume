@@ -232,6 +232,7 @@ const defaultPortfolioData = {
   bio: '',
   email: '',
   skills: '',
+  technologyCategories: {},
   accentColor: '#6d4aff'
 }
 
@@ -270,6 +271,7 @@ function normalizePortfolioData(savedData = {}) {
     ...createDefaultPortfolioData(),
     ...savedData,
     bio: savedData.bio || savedData.profile || savedData.jobTitle || '',
+    technologyCategories: savedData.technologyCategories || {},
     projects
   }
 }

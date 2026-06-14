@@ -1,4 +1,8 @@
 import styles from './PortfolioPreview.module.css'
+import {
+  groupTechnologies,
+  parseTechnologies
+} from '../../utils/portfolio'
 
 function PortfolioFooter({ data, school, page }) {
   return (
@@ -9,11 +13,16 @@ function PortfolioFooter({ data, school, page }) {
   )
 }
 
+function displayUrl(value = '') {
+  return value.replace(/^https?:\/\//, '').replace(/\/$/, '')
+}
+
 export default function PortfolioPreview({ data }) {
-  const technologies = data.skills
-    .split(',')
-    .map((technology) => technology.trim())
-    .filter(Boolean)
+  const technologies = parseTechnologies(data.skills)
+  const technologyGroups = groupTechnologies(
+    technologies,
+    data.technologyCategories
+  )
   const projects = data.projects.filter((project) => (
     project.title ||
     project.description ||
@@ -53,10 +62,20 @@ export default function PortfolioPreview({ data }) {
 
         <section className={styles.technologies}>
           <h2>使用技術</h2>
-          <div className={styles.skills}>
-            {(technologies.length > 0 ? technologies : ['使用技術']).map(
-              (technology) => <span key={technology}>{technology}</span>
-            )}
+          <div className={styles.technologyGroups}>
+            {(technologyGroups.length > 0
+              ? technologyGroups
+              : [{ label: '技術', items: ['使用技術'] }]
+            ).map((group) => (
+              <div className={styles.technologyGroup} key={group.label}>
+                <strong>{group.label}</strong>
+                <div className={styles.technologyList}>
+                  {group.items.map((technology, index) => (
+                    <span key={`${technology}-${index}`}>{technology}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -84,6 +103,11 @@ export default function PortfolioPreview({ data }) {
                     <div className={styles.projectBody}>
                       <h3>{project.title || '制作物名'}</h3>
                       <p>{project.description || '制作物の説明がここに表示されます。'}</p>
+                      {project.showUrl && project.url && (
+                        <span className={styles.projectUrl}>
+                          {displayUrl(project.url)}
+                        </span>
+                      )}
                     </div>
                   </article>
                 )
@@ -110,6 +134,12 @@ export default function PortfolioPreview({ data }) {
               <span>PROJECT {String(projectIndex + 1).padStart(2, '0')}</span>
               <h2>{project.title || '制作物名'}</h2>
               <p>{project.description || '制作物の説明'}</p>
+              {project.showUrl && project.url && (
+                <div className={styles.detailUrl}>
+                  <span>URL</span>
+                  <strong>{displayUrl(project.url)}</strong>
+                </div>
+              )}
             </header>
 
             <div className={styles.screenshotGrid}>
