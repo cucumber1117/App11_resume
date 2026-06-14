@@ -120,15 +120,27 @@ export function createPortfolioScreenshot() {
   }
 }
 
+export function createPortfolioLink() {
+  return {
+    id: crypto.randomUUID?.() || `link-${Date.now()}-${Math.random()}`,
+    label: '',
+    url: '',
+    show: true
+  }
+}
+
 export function createPortfolioProject() {
   return {
     id: crypto.randomUUID?.() || `project-${Date.now()}-${Math.random()}`,
     title: '',
     role: '',
+    responsibility: '',
     description: '',
     technologies: '',
+    selectedTechnologies: [],
     url: '',
     showUrl: false,
+    links: [],
     image: '',
     screenshots: [createPortfolioScreenshot()]
   }

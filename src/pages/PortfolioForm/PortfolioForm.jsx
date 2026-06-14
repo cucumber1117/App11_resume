@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import styles from './PortfolioForm.module.css'
 import {
+  createPortfolioLink,
   createPortfolioProject,
   createPortfolioScreenshot,
+  groupTechnologies,
   parseTechnologies,
   TECHNOLOGY_GROUPS
 } from '../../utils/portfolio'
 
 const MAX_PROJECTS = 6
 const MAX_SCREENSHOTS = 4
+const MAX_LINKS = 5
 function readImage(file, onLoad) {
   if (!file || !file.type.startsWith('image/')) return
   if (file.size > 10 * 1024 * 1024) {
@@ -84,6 +87,63 @@ export default function PortfolioForm({ data, onChange, onSave }) {
       ...data,
       projects: data.projects.map((project) => (
         project.id === id ? { ...project, [field]: value } : project
+      ))
+    })
+  }
+
+  function toggleProjectTechnology(projectId, technology) {
+    onChange({
+      ...data,
+      projects: data.projects.map((project) => {
+        if (project.id !== projectId) return project
+        const selectedTechnologies = project.selectedTechnologies || []
+        return {
+          ...project,
+          selectedTechnologies: selectedTechnologies.includes(technology)
+            ? selectedTechnologies.filter((item) => item !== technology)
+            : [...selectedTechnologies, technology]
+        }
+      })
+    })
+  }
+
+  function addProjectLink(projectId) {
+    onChange({
+      ...data,
+      projects: data.projects.map((project) => (
+        project.id === projectId && project.links.length < MAX_LINKS
+          ? { ...project, links: [...project.links, createPortfolioLink()] }
+          : project
+      ))
+    })
+  }
+
+  function updateProjectLink(projectId, linkId, field, value) {
+    onChange({
+      ...data,
+      projects: data.projects.map((project) => (
+        project.id === projectId
+          ? {
+            ...project,
+            links: project.links.map((link) => (
+              link.id === linkId ? { ...link, [field]: value } : link
+            ))
+          }
+          : project
+      ))
+    })
+  }
+
+  function removeProjectLink(projectId, linkId) {
+    onChange({
+      ...data,
+      projects: data.projects.map((project) => (
+        project.id === projectId
+          ? {
+            ...project,
+            links: project.links.filter((link) => link.id !== linkId)
+          }
+          : project
       ))
     })
   }
@@ -372,36 +432,133 @@ export default function PortfolioForm({ data, onChange, onSave }) {
                     placeholder="制作した目的、特徴、工夫した点などを記入します。"
                   />
                 </label>
-                <div className={`${styles.fullWidth} ${styles.projectUrlField}`}>
-                  <label>
-                    制作物URL
-                    <input
-                      type="url"
-                      value={project.url}
-                      onChange={(event) => updateProject(
-                        project.id,
-                        'url',
-                        event.target.value
-                      )}
-                      placeholder="https://example.com"
-                    />
-                  </label>
-                  <label className={styles.urlToggle}>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(project.showUrl)}
-                      onChange={(event) => updateProject(
-                        project.id,
-                        'showUrl',
-                        event.target.checked
-                      )}
-                    />
-                    <span aria-hidden="true" />
-                    PDFにURLを表示
-                  </label>
-                  {!project.url && project.showUrl && (
-                    <small>表示するURLを入力してください。</small>
+                <label className={styles.fullWidth}>
+                  担当箇所・役割（共同制作の場合）
+                  <textarea
+                    rows="3"
+                    maxLength="250"
+                    value={project.responsibility}
+                    onChange={(event) => updateProject(
+                      project.id,
+                      'responsibility',
+                      event.target.value
+                    )}
+                    placeholder="例：画面設計、フロントエンド実装、Firebaseとの連携を担当"
+                  />
+                  <small>
+                    自分が担当した機能や工程を具体的に記入してください。
+                  </small>
+                </label>
+                <div className={`${styles.fullWidth} ${styles.projectTechnologies}`}>
+                  <div>
+                    <strong>この制作物で使用した技術</strong>
+                    <small>上の「使用技術」に追加した項目から選択できます。</small>
+                  </div>
+                  {technologies.length > 0 ? (
+                    <div className={styles.projectTechnologyGroups}>
+                      {groupTechnologies(
+                        technologies,
+                        data.technologyCategories
+                      ).map((group) => (
+                        <div
+                          className={styles.projectTechnologyGroup}
+                          key={group.label}
+                        >
+                          <strong>{group.label}</strong>
+                          <div>
+                            {group.items.map((technology) => (
+                              <label key={technology}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(
+                                    project.selectedTechnologies?.includes(technology)
+                                  )}
+                                  onChange={() => toggleProjectTechnology(
+                                    project.id,
+                                    technology
+                                  )}
+                                />
+                                <span>{technology}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>先に「使用技術」へ技術を追加してください。</p>
                   )}
+                </div>
+                <div className={`${styles.fullWidth} ${styles.projectLinks}`}>
+                  <div className={styles.projectLinksHeader}>
+                    <div>
+                      <strong>制作物URL</strong>
+                      <small>GitHub、公開サイト、動画などを複数登録できます。</small>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addProjectLink(project.id)}
+                      disabled={project.links.length >= MAX_LINKS}
+                    >
+                      ＋ URLを追加
+                    </button>
+                  </div>
+                  {project.links.length === 0 && (
+                    <p>必要な場合はURLを追加してください。</p>
+                  )}
+                  {project.links.map((link, linkIndex) => (
+                    <div className={styles.projectLinkRow} key={link.id}>
+                      <label>
+                        表示名
+                        <input
+                          value={link.label}
+                          onChange={(event) => updateProjectLink(
+                            project.id,
+                            link.id,
+                            'label',
+                            event.target.value
+                          )}
+                          placeholder={linkIndex === 0 ? 'GitHub' : '公開サイト'}
+                        />
+                      </label>
+                      <label>
+                        URL
+                        <input
+                          type="url"
+                          value={link.url}
+                          onChange={(event) => updateProjectLink(
+                            project.id,
+                            link.id,
+                            'url',
+                            event.target.value
+                          )}
+                          placeholder="https://example.com"
+                        />
+                      </label>
+                      <label className={styles.urlToggle}>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(link.show)}
+                          onChange={(event) => updateProjectLink(
+                            project.id,
+                            link.id,
+                            'show',
+                            event.target.checked
+                          )}
+                        />
+                        <span aria-hidden="true" />
+                        PDF表示
+                      </label>
+                      <button
+                        type="button"
+                        className={styles.removeLinkButton}
+                        onClick={() => removeProjectLink(project.id, link.id)}
+                        aria-label={`${link.label || `URL ${linkIndex + 1}`}を削除`}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  ))}
                 </div>
                 <label className={styles.fullWidth}>
                   制作物の画像と説明

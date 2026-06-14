@@ -6,6 +6,7 @@ import PortfolioPreview from './pages/PortfolioPreview/PortfolioPreview'
 import ResumeForm from './pages/ResumeForm/ResumeForm'
 import ResumePreview from './pages/ResumePreview/ResumePreview'
 import {
+  createPortfolioLink,
   createPortfolioProject,
   createPortfolioScreenshot
 } from './utils/portfolio'
@@ -258,10 +259,31 @@ function normalizePortfolioData(savedData = {}) {
           ...createPortfolioScreenshot(),
           image: project.image || ''
         }]
+      const links = Array.isArray(project.links)
+        ? project.links.map((link) => ({
+          ...createPortfolioLink(),
+          ...link
+        }))
+        : project.url
+          ? [{
+            ...createPortfolioLink(),
+            label: 'URL',
+            url: project.url,
+            show: Boolean(project.showUrl)
+          }]
+          : []
 
       return {
         ...createPortfolioProject(),
         ...project,
+        responsibility: project.responsibility || project.role || '',
+        selectedTechnologies: Array.isArray(project.selectedTechnologies)
+          ? project.selectedTechnologies
+          : String(project.technologies || '')
+            .split(/[,、\n]/)
+            .map((technology) => technology.trim())
+            .filter(Boolean),
+        links,
         screenshots
       }
     })
@@ -726,7 +748,7 @@ function App() {
         required: true
       }
     ]
-    const hasPortfolioErrors = portfolioChecks.some(
+    const hasPortfolioIncompleteItems = portfolioChecks.some(
       (item) => item.required && !item.complete
     )
 
@@ -804,7 +826,7 @@ function App() {
                 </button>
               </div>
               <p className="pdf-check-description">
-                必須項目を確認してください。
+                未入力項目があっても、仮状態のPDFとして出力できます。
               </p>
               <ul className="pdf-check-list">
                 {portfolioChecks.map((item) => (
@@ -820,9 +842,9 @@ function App() {
                   </li>
                 ))}
               </ul>
-              {hasPortfolioErrors && (
+              {hasPortfolioIncompleteItems && (
                 <p className="pdf-check-error">
-                  未入力の必須項目を入力してからPDFを出力してください。
+                  未入力項目があります。仮状態として出力する場合は、そのままPDFを作成してください。
                 </p>
               )}
               <div className="pdf-check-actions">
@@ -841,9 +863,9 @@ function App() {
                     previewId: 'portfolio-preview',
                     filePrefix: 'portfolio'
                   })}
-                  disabled={hasPortfolioErrors || isExportingPdf}
+                  disabled={isExportingPdf}
                 >
-                  {isExportingPdf ? 'PDFを作成中...' : '確認してPDF出力'}
+                  {isExportingPdf ? 'PDFを作成中...' : '仮状態でもPDF出力'}
                 </button>
               </div>
             </section>
