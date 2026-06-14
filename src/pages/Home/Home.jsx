@@ -67,11 +67,20 @@ function formatUpdatedAt(value) {
 
 export default function Home({
   drafts,
+  portfolioDrafts,
   onOpenDraft,
   onDeleteDraft,
+  onCreatePortfolio,
+  onOpenPortfolioDraft,
+  onDeletePortfolioDraft,
   onSelectTemplate
 }) {
-  const latestDraft = drafts[0]
+  const latestResumeDraft = drafts[0]
+  const latestPortfolioDraft = portfolioDrafts[0]
+  const latestDraft = [latestResumeDraft, latestPortfolioDraft]
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0]
+  const latestDraftIsPortfolio = latestDraft?.id === latestPortfolioDraft?.id
   const [isCustomOpen, setIsCustomOpen] = useState(false)
   const [customSections, setCustomSections] = useState({
     photo: true,
@@ -103,7 +112,11 @@ export default function Home({
         {latestDraft && (
           <button
             className={styles.continueButton}
-            onClick={() => onOpenDraft(latestDraft.id)}
+            onClick={() => (
+              latestDraftIsPortfolio
+                ? onOpenPortfolioDraft(latestDraft.id)
+                : onOpenDraft(latestDraft.id)
+            )}
           >
             編集を続ける
           </button>
@@ -115,8 +128,8 @@ export default function Home({
           <span className={styles.eyebrow}>Standard JIS Resume Builder</span>
           <h1>履歴書を、きれいに。<br />迷わず、すばやく。</h1>
           <p>
-            入力内容をリアルタイムで確認しながら、JIS形式の履歴書を
-            A4・2ページのPDFとして作成できます。
+            入力内容をリアルタイムで確認しながら、履歴書とポートフォリオを
+            A4のPDFとして作成できます。
           </p>
           <div className={styles.actions}>
             <a className={styles.primaryAction} href="#templates">
@@ -126,6 +139,13 @@ export default function Home({
               </svg>
               履歴書を作成する
             </a>
+            <button
+              className={styles.secondaryAction}
+              type="button"
+              onClick={onCreatePortfolio}
+            >
+              ポートフォリオを作成する
+            </button>
           </div>
         </div>
 
@@ -229,6 +249,30 @@ export default function Home({
         )}
       </section>
 
+      <section className={styles.portfolioSection}>
+        <div className={styles.portfolioCopy}>
+          <span className={styles.eyebrow}>Create Portfolio</span>
+          <h2>作品とスキルを、ひとつの資料に。</h2>
+          <p>
+            プロフィール、スキル、制作実績を整理して、
+            応募時に添付できるA4ポートフォリオを作成できます。
+          </p>
+          <button type="button" onClick={onCreatePortfolio}>
+            新しいポートフォリオを作成
+          </button>
+        </div>
+        <div className={styles.portfolioMock} aria-hidden="true">
+          <span>PORTFOLIO</span>
+          <strong>Selected Works</strong>
+          <div>
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
+        </div>
+      </section>
+
       {drafts.length > 0 && (
         <section className={styles.drafts}>
           <div className={styles.templateHeading}>
@@ -264,6 +308,39 @@ export default function Home({
         </section>
       )}
 
+      {portfolioDrafts.length > 0 && (
+        <section className={styles.drafts}>
+          <div className={styles.templateHeading}>
+            <span className={styles.eyebrow}>Portfolio Drafts</span>
+            <h2>保存したポートフォリオ</h2>
+            <p>編集を再開する下書きを選択してください。</p>
+          </div>
+          <div className={styles.draftGrid}>
+            {portfolioDrafts.map((draft) => (
+              <article className={styles.draftCard} key={draft.id}>
+                <button
+                  className={styles.draftOpenButton}
+                  onClick={() => onOpenPortfolioDraft(draft.id)}
+                >
+                  <span className={styles.draftType}>ポートフォリオ</span>
+                  <strong>{draft.title}</strong>
+                  <small>更新: {formatUpdatedAt(draft.updatedAt)}</small>
+                </button>
+                <button
+                  className={styles.draftDeleteButton}
+                  onClick={() => onDeletePortfolioDraft(draft.id)}
+                  aria-label={`${draft.title}を削除`}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 3h8l1 2h4v2H3V5h4l1-2Zm1.2 2h5.6l-.3-.5h-5l-.3.5ZM6 9h12l-1 12H7L6 9Zm2.2 2 .7 8h6.2l.7-8H8.2Z" />
+                  </svg>
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className={styles.features}>
         <article>
           <span className={styles.featureNumber}>01</span>
@@ -278,7 +355,7 @@ export default function Home({
         <article>
           <span className={styles.featureNumber}>03</span>
           <h2>PDF出力</h2>
-          <p>完成した履歴書をA4・2ページのPDFとしてダウンロードできます。</p>
+          <p>完成した履歴書とポートフォリオをA4のPDFとしてダウンロードできます。</p>
         </article>
       </section>
     </main>

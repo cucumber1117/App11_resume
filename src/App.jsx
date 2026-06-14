@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import './App.css'
 import Home from './pages/Home/Home'
+import PortfolioForm from './pages/PortfolioForm/PortfolioForm'
+import PortfolioPreview from './pages/PortfolioPreview/PortfolioPreview'
 import ResumeForm from './pages/ResumeForm/ResumeForm'
 import ResumePreview from './pages/ResumePreview/ResumePreview'
+import { createPortfolioProject } from './utils/portfolio'
 
 const LEGACY_STORAGE_KEY = 'resume_full_tdu'
 const DRAFTS_STORAGE_KEY = 'resume_drafts_v1'
+const PORTFOLIO_DRAFTS_STORAGE_KEY = 'portfolio_drafts_v1'
 let historyItemIdCounter = 0
 
 function createHistoryItemId() {
@@ -217,6 +221,38 @@ const defaultData = {
   
 }
 
+const defaultPortfolioData = {
+  name: '',
+  jobTitle: '',
+  bio: '',
+  email: '',
+  website: '',
+  skills: '',
+  accentColor: '#6d4aff'
+}
+
+function createDefaultPortfolioData() {
+  return {
+    ...structuredClone(defaultPortfolioData),
+    projects: [createPortfolioProject()]
+  }
+}
+
+function normalizePortfolioData(savedData = {}) {
+  const projects = Array.isArray(savedData.projects) && savedData.projects.length > 0
+    ? savedData.projects.map((project) => ({
+      ...createPortfolioProject(),
+      ...project
+    }))
+    : [createPortfolioProject()]
+
+  return {
+    ...createDefaultPortfolioData(),
+    ...savedData,
+    projects
+  }
+}
+
 function createDefaultData(
   templateType = 'employment',
   templateSections = TEMPLATE_SECTION_PRESETS[templateType]
@@ -321,15 +357,39 @@ function loadDrafts() {
   return []
 }
 
+function loadPortfolioDrafts() {
+  try {
+    const savedDrafts = localStorage.getItem(PORTFOLIO_DRAFTS_STORAGE_KEY)
+    if (!savedDrafts) return []
+    const parsedDrafts = JSON.parse(savedDrafts)
+    if (!Array.isArray(parsedDrafts)) return []
+
+    return parsedDrafts.map((draft) => ({
+      ...draft,
+      data: normalizePortfolioData(draft.data)
+    }))
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
 function App() {
   const [currentView, setCurrentView] = useState('home')
   const [isPdfCheckOpen, setIsPdfCheckOpen] = useState(false)
   const [isSectionSettingsOpen, setIsSectionSettingsOpen] = useState(false)
   const [isExportingPdf, setIsExportingPdf] = useState(false)
   const [drafts, setDrafts] = useState(loadDrafts)
+  const [portfolioDrafts, setPortfolioDrafts] = useState(loadPortfolioDrafts)
   const [activeDraftId, setActiveDraftId] = useState(drafts[0]?.id || null)
+  const [activePortfolioDraftId, setActivePortfolioDraftId] = useState(
+    portfolioDrafts[0]?.id || null
+  )
   const [data, setData] = useState(
     () => drafts[0]?.data || createDefaultData()
+  )
+  const [portfolioData, setPortfolioData] = useState(
+    () => portfolioDrafts[0]?.data || createDefaultPortfolioData()
   )
 
   function handleSave(d) {
@@ -359,7 +419,39 @@ function App() {
     alert(`「${savedDraft.title}」を一時保存しました。`)
   }
 
-  async function generatePDF() {
+  function handlePortfolioSave(nextData) {
+    const currentDraft = portfolioDrafts.find(
+      (draft) => draft.id === activePortfolioDraftId
+    )
+    const title = currentDraft?.title || window.prompt(
+      '下書きの名前を入力してください。',
+      `${nextData.name || '名称未設定'}のポートフォリオ`
+    )
+
+    if (!title?.trim()) return
+
+    const id = currentDraft?.id || `portfolio-${Date.now()}`
+    const savedDraft = {
+      id,
+      title: title.trim(),
+      updatedAt: new Date().toISOString(),
+      data: nextData
+    }
+    const nextDrafts = [
+      savedDraft,
+      ...portfolioDrafts.filter((draft) => draft.id !== id)
+    ]
+
+    setPortfolioDrafts(nextDrafts)
+    setActivePortfolioDraftId(id)
+    localStorage.setItem(PORTFOLIO_DRAFTS_STORAGE_KEY, JSON.stringify(nextDrafts))
+    alert(`「${savedDraft.title}」を一時保存しました。`)
+  }
+
+  async function generatePDF({
+    previewId = 'resume-preview',
+    filePrefix = 'resume'
+  } = {}) {
     function loadScript(src) {
       return new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) return resolve()
@@ -371,7 +463,7 @@ function App() {
       })
     }
 
-    const container = document.getElementById('resume-preview')
+    const container = document.getElementById(previewId)
     if (!container) return alert('プレビューが見つかりません')
 
     setIsExportingPdf(true)
@@ -383,7 +475,7 @@ function App() {
       const jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : null
       if (!html2canvas || !jsPDF) throw new Error('PDF用ライブラリの読み込みに失敗しました')
 
-      const sheets = Array.from(document.querySelectorAll('[data-sheet="a4"]'))
+      const sheets = Array.from(container.querySelectorAll('[data-sheet="a4"]'))
       if (sheets.length === 0) return alert('A4シートが見つかりません')
 
       const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
@@ -443,13 +535,13 @@ function App() {
         const offsetX = (pdfPageWidth - drawWidth) / 2
         const offsetY = (pdfPageHeight - drawHeight) / 2
 
-        pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawWidth, drawHeight)
+        pdf.addImage(imgData, 'PNG', offsetX, offsetY, drawWidth, drawHeight)
         if (i < sheets.length - 1) pdf.addPage()
 
         document.body.removeChild(wrapper)
       }
 
-      pdf.save(`resume-${Date.now()}.pdf`)
+      pdf.save(`${filePrefix}-${Date.now()}.pdf`)
       setIsPdfCheckOpen(false)
     } catch (err) {
       console.error(err)
@@ -461,6 +553,10 @@ function App() {
 
   function handleReset() {
     if (!confirm('全ての入力内容をクリアして初期化しますか？')) return
+    if (currentView === 'portfolio') {
+      setPortfolioData(createDefaultPortfolioData())
+      return
+    }
     setData(createDefaultData(data.templateType, data.templateSections))
   }
 
@@ -489,6 +585,34 @@ function App() {
     if (activeDraftId === draftId) {
       setActiveDraftId(null)
       setData(createDefaultData())
+    }
+  }
+
+  function handleCreatePortfolio() {
+    setPortfolioData(createDefaultPortfolioData())
+    setActivePortfolioDraftId(null)
+    setCurrentView('portfolio')
+  }
+
+  function handleOpenPortfolioDraft(draftId) {
+    const draft = portfolioDrafts.find((item) => item.id === draftId)
+    if (!draft) return
+    setPortfolioData(normalizePortfolioData(draft.data))
+    setActivePortfolioDraftId(draft.id)
+    setCurrentView('portfolio')
+  }
+
+  function handleDeletePortfolioDraft(draftId) {
+    const draft = portfolioDrafts.find((item) => item.id === draftId)
+    if (!draft || !confirm(`「${draft.title}」を削除しますか？`)) return
+
+    const nextDrafts = portfolioDrafts.filter((item) => item.id !== draftId)
+    setPortfolioDrafts(nextDrafts)
+    localStorage.setItem(PORTFOLIO_DRAFTS_STORAGE_KEY, JSON.stringify(nextDrafts))
+
+    if (activePortfolioDraftId === draftId) {
+      setActivePortfolioDraftId(null)
+      setPortfolioData(createDefaultPortfolioData())
     }
   }
 
@@ -536,10 +660,148 @@ function App() {
     return (
       <Home
         drafts={drafts}
+        portfolioDrafts={portfolioDrafts}
         onOpenDraft={handleOpenDraft}
         onDeleteDraft={handleDeleteDraft}
+        onCreatePortfolio={handleCreatePortfolio}
+        onOpenPortfolioDraft={handleOpenPortfolioDraft}
+        onDeletePortfolioDraft={handleDeletePortfolioDraft}
         onSelectTemplate={handleSelectTemplate}
       />
+    )
+  }
+
+  if (currentView === 'portfolio') {
+    const portfolioChecks = [
+      { label: '氏名・活動名', complete: Boolean(portfolioData.name.trim()), required: true },
+      { label: '肩書き', complete: Boolean(portfolioData.jobTitle.trim()), required: true },
+      { label: '自己紹介', complete: Boolean(portfolioData.bio.trim()), required: false },
+      {
+        label: '制作実績',
+        complete: portfolioData.projects.some((project) => project.title.trim()),
+        required: true
+      },
+      {
+        label: '連絡先',
+        complete: Boolean(portfolioData.email.trim() || portfolioData.website.trim()),
+        required: false
+      }
+    ]
+    const hasPortfolioErrors = portfolioChecks.some(
+      (item) => item.required && !item.complete
+    )
+
+    return (
+      <div className="app-container">
+        <header className="app-header">
+          <div className="header-brand">
+            <span className="badge">Portfolio</span>
+            <h1>ポートフォリオ 作成ツール</h1>
+          </div>
+          <div className="header-actions">
+            <button className="btn btn-secondary" onClick={() => setCurrentView('home')}>
+              ホーム
+            </button>
+            <button className="btn btn-danger" onClick={handleReset}>
+              初期化
+            </button>
+            <button
+              className="btn btn-primary btn-lg"
+              onClick={() => setIsPdfCheckOpen(true)}
+            >
+              PDFダウンロード
+            </button>
+          </div>
+        </header>
+
+        <div className="workspace-grid">
+          <div className="editor-pane">
+            <PortfolioForm
+              data={portfolioData}
+              onChange={setPortfolioData}
+              onSave={handlePortfolioSave}
+            />
+          </div>
+          <div className="preview-pane">
+            <div className="preview-sticky-container">
+              <div className="preview-info-banner">
+                右側はA4ポートフォリオの印刷プレビューです。
+              </div>
+              <PortfolioPreview data={portfolioData} />
+            </div>
+          </div>
+        </div>
+
+        {isPdfCheckOpen && (
+          <div className="pdf-check-backdrop" role="presentation">
+            <section
+              className="pdf-check-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="portfolio-pdf-check-title"
+            >
+              <div className="pdf-check-header">
+                <div>
+                  <span className="pdf-check-eyebrow">Before Export</span>
+                  <h2 id="portfolio-pdf-check-title">PDF出力前チェック</h2>
+                </div>
+                <button
+                  className="pdf-check-close"
+                  type="button"
+                  onClick={() => setIsPdfCheckOpen(false)}
+                  disabled={isExportingPdf}
+                  aria-label="閉じる"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="pdf-check-description">
+                必須項目を確認してください。
+              </p>
+              <ul className="pdf-check-list">
+                {portfolioChecks.map((item) => (
+                  <li
+                    key={item.label}
+                    className={item.complete ? 'is-complete' : 'is-incomplete'}
+                  >
+                    <span className="pdf-check-status" aria-hidden="true">
+                      {item.complete ? '✓' : '!'}
+                    </span>
+                    <span>{item.label}</span>
+                    <small>{item.required ? '必須' : '推奨'}</small>
+                  </li>
+                ))}
+              </ul>
+              {hasPortfolioErrors && (
+                <p className="pdf-check-error">
+                  未入力の必須項目を入力してからPDFを出力してください。
+                </p>
+              )}
+              <div className="pdf-check-actions">
+                <button
+                  className="btn btn-secondary"
+                  type="button"
+                  onClick={() => setIsPdfCheckOpen(false)}
+                  disabled={isExportingPdf}
+                >
+                  戻って修正
+                </button>
+                <button
+                  className="btn btn-primary btn-lg"
+                  type="button"
+                  onClick={() => generatePDF({
+                    previewId: 'portfolio-preview',
+                    filePrefix: 'portfolio'
+                  })}
+                  disabled={hasPortfolioErrors || isExportingPdf}
+                >
+                  {isExportingPdf ? 'PDFを作成中...' : '確認してPDF出力'}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -674,7 +936,7 @@ function App() {
               <button
                 className="btn btn-primary btn-lg"
                 type="button"
-                onClick={generatePDF}
+                onClick={() => generatePDF()}
                 disabled={hasPdfErrors || isExportingPdf}
               >
                 {isExportingPdf ? 'PDFを作成中...' : '確認してPDF出力'}

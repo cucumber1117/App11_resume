@@ -87,6 +87,8 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-top: 34px;
 }
 
@@ -117,6 +119,23 @@
   width: 20px;
   height: 20px;
   fill: currentColor;
+}
+
+.secondaryAction {
+  padding: 14px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-h);
+  background: var(--bg);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.secondaryAction:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .previewCard {
@@ -188,6 +207,84 @@
   max-width: 1180px;
   margin: 0 auto 72px;
   scroll-margin-top: 24px;
+}
+
+.portfolioSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
+  align-items: center;
+  gap: 48px;
+  max-width: 1180px;
+  margin: 0 auto 72px;
+  padding: 48px;
+  border-radius: 24px;
+  color: #ffffff;
+  background: #17131e;
+  text-align: left;
+}
+
+.portfolioCopy h2 {
+  margin: 10px 0 14px;
+  color: #ffffff;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.18;
+}
+
+.portfolioCopy p {
+  max-width: 590px;
+  color: #c7c0cf;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.portfolioCopy button {
+  margin-top: 24px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  color: #17131e;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.portfolioMock {
+  min-height: 270px;
+  padding: 30px;
+  border-radius: 14px;
+  color: #17131e;
+  background: #ffffff;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.35);
+  transform: rotate(2deg);
+}
+
+.portfolioMock > span {
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.portfolioMock > strong {
+  display: block;
+  margin: 22px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #17131e;
+  font-size: 20px;
+}
+
+.portfolioMock > div {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.portfolioMock i {
+  display: block;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, var(--accent), #2b1839);
 }
 
 .templateHeading {
@@ -499,6 +596,11 @@
 
   .customOptions {
     grid-template-columns: 1fr;
+  }
+
+  .portfolioSection {
+    grid-template-columns: 1fr;
+    padding: 30px 24px;
   }
 
   .features article {
