@@ -254,7 +254,7 @@ export default function Home({
           <span className={styles.eyebrow}>Create Portfolio</span>
           <h2>学生生活の学びと制作物を、ひとつの資料に。</h2>
           <p>
-            大学情報、自己紹介、プロフィール、使用技術、制作物を整理して、
+            大学情報、自己紹介、使用技術、制作物を整理して、
             就職・インターン応募に使えるA4ポートフォリオを作成できます。
           </p>
           <button type="button" onClick={onCreatePortfolio}>

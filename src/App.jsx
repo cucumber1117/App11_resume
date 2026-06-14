@@ -229,7 +229,6 @@ const defaultPortfolioData = {
   universityName: '',
   facultyName: '',
   departmentName: '',
-  profile: '',
   bio: '',
   email: '',
   skills: '',
@@ -270,7 +269,7 @@ function normalizePortfolioData(savedData = {}) {
   return {
     ...createDefaultPortfolioData(),
     ...savedData,
-    profile: savedData.profile || savedData.jobTitle || '',
+    bio: savedData.bio || savedData.profile || savedData.jobTitle || '',
     projects
   }
 }
@@ -711,7 +710,6 @@ function App() {
       },
       { label: '連絡先メール', complete: Boolean(portfolioData.email.trim()), required: true },
       { label: '自己紹介', complete: Boolean(portfolioData.bio.trim()), required: false },
-      { label: 'プロフィール', complete: Boolean(portfolioData.profile.trim()), required: false },
       { label: '使用技術', complete: Boolean(portfolioData.skills.trim()), required: false },
       {
         label: '制作物',

@@ -180,7 +180,7 @@ export default function PortfolioForm({ data, onChange, onSave }) {
         <div className={styles.sectionHeader}>
           <div>
             <span>About Me</span>
-            <h2>自己紹介・プロフィール</h2>
+            <h2>自己紹介・使用技術</h2>
           </div>
         </div>
         <div className={styles.grid}>
@@ -194,17 +194,6 @@ export default function PortfolioForm({ data, onChange, onSave }) {
               placeholder="興味のある分野や、現在学んでいることを紹介します。"
             />
             <small>{data.bio.length} / 500文字</small>
-          </label>
-          <label className={styles.fullWidth}>
-            プロフィール
-            <textarea
-              rows="4"
-              maxLength="400"
-              value={data.profile}
-              onChange={(event) => updateField('profile', event.target.value)}
-              placeholder="強み、目標、課外活動などを記入します。"
-            />
-            <small>{data.profile.length} / 400文字</small>
           </label>
           <label className={styles.fullWidth}>
             使用技術

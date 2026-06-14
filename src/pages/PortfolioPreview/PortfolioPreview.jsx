@@ -44,14 +44,10 @@ export default function PortfolioPreview({ data }) {
           </div>
         </header>
 
-        <section className={styles.aboutGrid}>
+        <section className={styles.aboutSection}>
           <div className={styles.aboutBlock}>
             <h2>自己紹介</h2>
             <p>{data.bio || '自己紹介を入力すると、ここに表示されます。'}</p>
-          </div>
-          <div className={styles.aboutBlock}>
-            <h2>プロフィール</h2>
-            <p>{data.profile || 'プロフィールを入力すると、ここに表示されます。'}</p>
           </div>
         </section>
 
